@@ -1,0 +1,71 @@
+#!/usr/bin/bash
+#
+# This is a wrapper for terraform, injecting vars we'd rather keep private and not checked into GIT, and
+# by running terraform in a docker container, we ease the install.
+#
+
+TERRAFORM_VER=0.11.3
+
+if [ -f ~/.aws/vars ]; then
+  . ~/.aws/vars
+
+  export TF_VAR_VPC_ID=$VPC_ID
+  export TF_VAR_SUBNET_ID=$SUBNET_ID
+  export TF_VAR_IAM_ROLE=$IAM_ROLE
+  export TF_VAR_INSTANCE_PROFILE=$INSTANCE_PROFILE
+  export TF_VAR_SECURITY_GROUP=$SECURITY_GROUP
+  export TF_VAR_PROFILE=$PROFILE
+  export TF_VAR_PROJECT=$PROJECT
+    
+fi
+
+# helper
+function docker() {
+  sudo docker $@
+}
+
+# Because of the fixed nature of the env, the params are set for the amis we see.
+# @TODO Externalize in the future
+function listLatestAMI() {
+  AMI=$1
+
+  if [ -z "${AMI}" ]; then
+    # set from ~/.aws/vars if exists
+    AMI=${DEFAULT_AMI_NAME}
+  fi
+
+  # echo "AMI Set: ${AMI}"
+
+  CMD="aws ec2 describe-images \
+    --filters Name=architecture,Values='x86_64' \
+    --filters Name='name',Values='${AMI}'"
+
+  ImageJSON="`$CMD`"
+
+  imageId=`echo $ImageJSON | jq '.Images[].ImageId'`
+
+  # Remove quotes
+  temp="${imageId%\"}"
+  temp="${temp#\"}"
+  echo "$temp"
+}
+
+function terraform() {
+  docker run --network=host --rm -it \
+    -v $(pwd):/app \
+    -v /.terraform.d/plugins/lunix_amd64/:/plugins/ \
+    -v /etc/pki/tls/certs/cacert.crt:/etc/pki/tls/certs/cacert.crt \
+    -w /app \
+    --log-driver=journald \
+    hashicorp/terraform:${TERRAFORM_VER} $@
+}
+
+
+
+# Get the current AMI
+AMI=`listLatestAMI $DEFAULT_AMI_NAME`
+export TF_VAR_AMI=$AMI
+
+# printenv
+# echo call terraform
+terraform $@

@@ -1,0 +1,115 @@
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+
+export PATH
+
+function terraform() {
+  cmd=$1
+  shift;
+  params=$@
+  # if cmd does exist
+  if [[ ! -z "$cmd" ]]; then
+    if [[ $cmd != *.sh ]]; then
+      entrypoint="terraform"
+    else
+      params="$cmd $params"
+      cmd=""
+      entrypoint="/bin/bash"
+    fi
+  else
+    cmd=""
+    params=""
+    entrypoint="/bin/bash"
+  fi
+  echo "request is interactive" >> cmd.txt
+
+ # echo "params is $params"
+  sudo docker run --rm -it \
+  -v $PWD:/terraform \
+  -v ~/.aws:/root/.aws \
+  -v ~/.ssh:/root/.ssh \
+  -w /terraform \
+  --entrypoint="$entrypoint" \
+  hashicorp/terraform:full \
+  $cmd $params
+}
+
+function ansible() {
+  cmd=$1
+  echo "cmd is $cmd"
+  shift;
+  params=$@
+ # echo "params is $params"
+  sudo docker run --rm -it \
+  -v $PWD:/ansible \
+  -w /ansible \
+  valien/docker-ansible-for-aws:latest \
+  $cmd $params
+}
+
+# written to support passing in a script and / or cmd against aws w/ params
+function aws() {
+  cmd=$1
+  shift;
+  params=$@
+  # if cmd does exist
+  if [[ ! -z "$cmd" ]]; then
+    echo "cmd exists: $cmd" > cmd.txt
+    # if cmd is part of string for aws
+    if [[ $cmd != *.sh ]]; then
+      echo "cmd is for aws with params $params" >> cmd.txt
+      entrypoint="/usr/local/bin/aws"
+    else
+      echo "cmd is script for aws" >> cmd.txt
+      params="$cmd $params"
+      cmd=""
+      entrypoint="/bin/bash"
+    fi
+  else
+    echo "request is interactive" >> cmd.txt
+    #no cmdline params.  Go interactive
+    cmd=""
+    params=""
+    entrypoint="/bin/bash"
+  fi
+   
+  echo "$entrypoint: $cmd $params" >> cmd.txt
+ 
+  sudo docker run --rm -it \
+    -v ~/.aws:/root/.aws \
+    -v $PWD:/aws \
+    -e TERM \
+    -w /aws \
+    --entrypoint="$entrypoint" \
+    amazon/aws-cli:latest \
+    $cmd $params
+}
+
+function awsit() {
+  sudo docker run --rm -it \
+  -v ~/.aws:/root/.aws \
+  -v $PWD:/aws \
+  -e TERM \
+  -w /aws \
+  --entrypoint="/bin/bash" \
+  amazon/aws-cli:latest
+}
+
+alias docker='sudo docker $@'
+alias d='sudo docker $@'
+alias t='terraform $@'
+alias ap='ansible ansible-playbook $@'
+alias ait='ansible /bin/sh'
+alias av='ansible ansible-vault $@'
+alias ai='ansible ansible-inventory $@'
+alias a='ansible $@'
+#alias aws='aws $@'
+#alias awsit='awsit /bin/sh'
