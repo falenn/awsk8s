@@ -4,9 +4,15 @@
 # by running terraform in a docker container, we ease the install.
 #
 
-#TERRAFORM_VER=0.11.3
-TERRAFORM_VER=full
+TERRAFORM_VER=0.14.8
+VARS_FILE=variables
 AMI_NAME="/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
+if [ -e $VARS_FILE ]; then
+  . ./$VARS_FILE
+else
+  echo "No file $VARS_FILE found"
+fi
 
 # helper
 function docker() {
@@ -45,23 +51,24 @@ function terraform() {
     -v $(pwd):/terraform \
     -v ~/.aws:/root/.aws \
     -v ~/.ssh:/root/.ssh \
+    --env-file $VARS_FILE \
+    -e TF_VAR_AWS_AMI_ID=$AMI_ID \
     -w /terraform \
     -v /.terraform.d/plugins/lunix_amd64/:/plugins/ \
     --log-driver=journald \
-    hashicorp/terraform:${TERRAFORM_VER} $@
+    --entrypoint="/bin/sh" \
+    hashicorp/terraform:${TERRAFORM_VER} 
 
+# --entrypoint="/bin/sh"
 # --network=host
 # -v /etc/pki/tls/certs/cacert.crt:/etc/pki/tls/certs/cacert.crt \ 
 }
 
-function updatePropsFile() {
-  sed -ir "s/^[#]*\s*${1}=.*/${1}=${2}/" $3
-}
-
 # Get the current AMI
-AMI=`listLatestAMI $DEFAULT_AMI_NAME`
-updatePropsFile TF_VAR_AMI $AMI terraform.tfvars
+AMI_ID=`listLatestAMI $TF_VAR_AWS_AMI_NAME`
+echo "AMI ID for $TF_VAR_AWS_AMI_NAME: $AMI_ID"
 
 # printenv
 # echo call terraform
 terraform $@
+

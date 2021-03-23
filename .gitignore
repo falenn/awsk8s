@@ -1,11 +1,15 @@
 cmd.txt
 *.swp
 
+# Key material
 id_rsa*
 id_rsa.pub
 
-# terraform variables
-terraform.tfvars
+# internal to terraform state
+.terraform*
 
-.terraform
+#private vars for terraform
+env
 
+^A�Ȑ^L@8
+\001\301\330@\310\220\f@8

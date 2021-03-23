@@ -1,12 +1,12 @@
 
   # SSH key
   data "local_file" "rsa_pub" {
-    filename = file("./id_rsa.pub")
+    filename = file("id_rsa.pub")
   }
 
   # User-data
   data "template_file" "user_data" {
-    filename = file("./scripts/install-prereqs.txt")
+    filename = file("scripts/install-prereqs.txt")
   }
 
   #create key-pair for SSH access into EC2 instance 
