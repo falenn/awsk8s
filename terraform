@@ -4,25 +4,15 @@
 # by running terraform in a docker container, we ease the install.
 #
 
-TERRAFORM_VER=0.11.3
-
-if [ -f ~/.aws/vars ]; then
-  . ~/.aws/vars
-
-  export TF_VAR_VPC_ID=$VPC_ID
-  export TF_VAR_SUBNET_ID=$SUBNET_ID
-  export TF_VAR_IAM_ROLE=$IAM_ROLE
-  export TF_VAR_INSTANCE_PROFILE=$INSTANCE_PROFILE
-  export TF_VAR_SECURITY_GROUP=$SECURITY_GROUP
-  export TF_VAR_PROFILE=$PROFILE
-  export TF_VAR_PROJECT=$PROJECT
-    
-fi
+#TERRAFORM_VER=0.11.3
+TERRAFORM_VER=full
+AMI_NAME="/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 
 # helper
 function docker() {
   sudo docker $@
 }
+
 
 # Because of the fixed nature of the env, the params are set for the amis we see.
 # @TODO Externalize in the future
@@ -51,20 +41,26 @@ function listLatestAMI() {
 }
 
 function terraform() {
-  docker run --network=host --rm -it \
-    -v $(pwd):/app \
+  docker run --rm -it \
+    -v $(pwd):/terraform \
+    -v ~/.aws:/root/.aws \
+    -v ~/.ssh:/root/.ssh \
+    -w /terraform \
     -v /.terraform.d/plugins/lunix_amd64/:/plugins/ \
-    -v /etc/pki/tls/certs/cacert.crt:/etc/pki/tls/certs/cacert.crt \
-    -w /app \
     --log-driver=journald \
     hashicorp/terraform:${TERRAFORM_VER} $@
+
+# --network=host
+# -v /etc/pki/tls/certs/cacert.crt:/etc/pki/tls/certs/cacert.crt \ 
 }
 
-
+function updatePropsFile() {
+  sed -ir "s/^[#]*\s*${1}=.*/${1}=${2}/" $3
+}
 
 # Get the current AMI
 AMI=`listLatestAMI $DEFAULT_AMI_NAME`
-export TF_VAR_AMI=$AMI
+updatePropsFile TF_VAR_AMI $AMI terraform.tfvars
 
 # printenv
 # echo call terraform

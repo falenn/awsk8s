@@ -1,5 +1,5 @@
 variable "profile" {
-  type    = "string"
+  type    = string
   default = "awsk8s"
 }
 

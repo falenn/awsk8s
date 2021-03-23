@@ -4,3 +4,6 @@ cmd.txt
 id_rsa*
 id_rsa.pub
 
+# terraform variables
+terraform.tfvars
+

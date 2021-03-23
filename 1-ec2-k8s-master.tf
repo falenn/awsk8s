@@ -1,21 +1,12 @@
-module ec2 {
-  # provider
-  provider "aws" {
-    region = "us-east-1"
-    assume_role {
-      role_arn = "${var.IAM_ROLE}"
-    }
-    alias = "east"
-  }  
 
   # SSH key
   data "local_file" "rsa_pub" {
-    filename = "${path.module}/id_rsa.pub"
+    filename = file("./id_rsa.pub")
   }
 
   # User-data
   data "template_file" "user_data" {
-    filename = "${path.module}/scripts/install-prereqs.txt"
+    filename = file("./scripts/install-prereqs.txt")
   }
 
   #create key-pair for SSH access into EC2 instance 
@@ -42,4 +33,3 @@ module ec2 {
       type = "k8s"
     }
   }
-}
