@@ -1,35 +1,45 @@
-
-  # SSH key
-  data "local_file" "rsa_pub" {
-    filename = file("id_rsa.pub")
+  variable "k8s-master-instance-type" {
+    default="t3.medium"
   }
+
+  variable "k8s-master-hostname" {
+    default="k8s-master"
+  }
+
+  variable "aws_ami_name" {
+    default="eVo_AMI_CentOS7*"
+  }
+  
+  # set via docker -e 
+  variable "aws_ami_id" {}
+
+  #data "aws_ssm_parameter" "linuxAmi" {
+  #  provider = aws.east
+  #  name = "/aws/service/eVo_AMI_CentOS7*"
+  #}
+
 
   # User-data
   data "template_file" "user_data" {
-    filename = file("scripts/install-prereqs.txt")
+    template = file("./scripts/install-prereqs.txt")
   }
 
-  #create key-pair for SSH access into EC2 instance 
-  resource "aws_key_pair" "k8s_ssh" {
-    provider = aws.east
-    key_name = "ehpc-clbates"
-    pulic_key = local_file.rsa_pub
-  }
 
   # Create and bootstrap EC2 in default region
   resource "aws_instance" "k8s-master" {
     provider 			= aws.east
-    ami 			= var.TF_VAR_AMI
+    ami 			= var.aws_ami_id
     instance_type 		= var.k8s-master-instance-type
-    key_name			= aws_key_pair.k8s_ssh.key_name
+    key_name			= var.aws_ssh_key_name
     associate_public_ip_address   = true
-    vpc_security_group_ids	= [var.SECURITY_GROUP]
-    subnet_id			= var.SUBNET_ID
+    vpc_security_group_ids	= [var.aws_security_group_id]
+    subnet_id			= var.aws_subnet_id
     user_data			= data.template_file.user_data.rendered
 
     tags = {
-      Name = "k8s-master",
-      project = TF_VAR_PROJECT,
+      USER = var.aws_username,
+      Name = var.k8s-master-hostname,
+      project = var.aws_project,
       type = "k8s"
     }
   }

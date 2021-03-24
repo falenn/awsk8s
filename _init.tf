@@ -9,9 +9,9 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
   assume_role {
-    role_arn = var.TF_VAR_AWS_IAM_ROLE
+    role_arn = var.aws_iam_role
   }
   alias = "east"
 }

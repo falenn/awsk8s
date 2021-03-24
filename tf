@@ -5,7 +5,7 @@
 #
 
 TERRAFORM_VER=0.14.8
-VARS_FILE=variables
+VARS_FILE=env
 AMI_NAME="/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 
 if [ -e $VARS_FILE ]; then
@@ -52,12 +52,11 @@ function terraform() {
     -v ~/.aws:/root/.aws \
     -v ~/.ssh:/root/.ssh \
     --env-file $VARS_FILE \
-    -e TF_VAR_AWS_AMI_ID=$AMI_ID \
+    -e TF_VAR_aws_ami_id=$AMI_ID \
     -w /terraform \
     -v /.terraform.d/plugins/lunix_amd64/:/plugins/ \
     --log-driver=journald \
-    --entrypoint="/bin/sh" \
-    hashicorp/terraform:${TERRAFORM_VER} 
+    hashicorp/terraform:${TERRAFORM_VER} $@ 
 
 # --entrypoint="/bin/sh"
 # --network=host
@@ -65,8 +64,8 @@ function terraform() {
 }
 
 # Get the current AMI
-AMI_ID=`listLatestAMI $TF_VAR_AWS_AMI_NAME`
-echo "AMI ID for $TF_VAR_AWS_AMI_NAME: $AMI_ID"
+AMI_ID=`listLatestAMI $TF_VAR_aws_ami_name`
+echo "AMI ID [$TF_VAR_aws_ami_name]: $AMI_ID"
 
 # printenv
 # echo call terraform
