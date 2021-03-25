@@ -8,8 +8,12 @@ id_rsa.pub
 # internal to terraform state
 .terraform*
 
+# terraform plans
+plan.out
+
+#terraform state
+terraform*
+
 #private vars for terraform
 env
 
-^A�Ȑ^L@8
-\001\301\330@\310\220\f@8
