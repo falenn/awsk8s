@@ -1,7 +1,7 @@
 # K8s on AWS
 
 ## About
-This project uses Terraform to spin up infrastructure on AWS
+This project uses Terraform to spin up infrastructure on AWS.  Goal is to stand up infrstructure and then defer to Ansible.  This terraform instance is a wrapper around Docker execution of hashicorp/terraform:<ver>!  There is no Terraform or Python installation dependency.
 
 
 ## Terraform Approach
