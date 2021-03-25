@@ -57,8 +57,27 @@ which is how terraform workspace passes variables in.
 Env vars can also be passed in with this prefix: "TF_VAR_"
 which is useful when wrapping terraform apply, etc. with bash automation.
 ```
-$ export TF_VAR_image_id=ami-abc123
-$ export TF_VAR_availability_zone_names='["us-west-1b","us-west-1d"]'
+$ export TF_VAR_image_id=ami-abc123'
+```
+
+Variables that are currently expected:
+```
+[clbates@ip-10-117-149-36 awsk8s (main *%=)]$ vi env 
+TF_VAR_aws_username=$USER
+TF_VAR_aws_resource_prefix=
+TF_VAR_aws_project
+TF_VAR_aws_security_group_id=
+TF_VAR_aws_subnet_id=
+TF_VAR_aws_iam_instance_profile=
+TF_VAR_aws_ssh_key_name= SSH key managed in AWS
+TF_VAR_aws_ami_name=
+#TF_VAR_aws_ec2_cloud_init_script="./scripts/install-prereqs.txt"
+# Default is 1
+TF_VAR_aws_ec2_k8s_master_count=1
+# Default is 0
+TF_VAR_aws_ec2_k8s_worker_count=1
+TF_VAR_ssh_deploy_key=  ->>>>   cat ~/.ssh/id_rsa.pub | base64
+
 ```
 
 
