@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ID_RSA_PUB=${id_rsa_pub}
+
 # Setup ec2-user
 useradd ec2-user
 usermod -a -G wheel
@@ -7,10 +9,13 @@ usermod -a -G wheel
 mkdir -p /home/ec2-user/.ssh
 touch /home/ec2-user/.ssh/authorized_keys
 # ID RSA from Terraform
-/bin/base64 --decode ${ID_RSA_PUB} >> /home/ec2-user/.ssh/authorized_keys
+echo $ID_RSA_PUB | /bin/base64 --decode  >> /home/ec2-user/.ssh/authorized_keys
 chown -R ec2-user: /home/ec2-user/.ssh
-chmod 640 /home/ec2-user/.ssh
+chmod 700 /home/ec2-user/.ssh
 chmod 600 /home/ec2-user/.ssh/authorized_keys
+
+
+#### - everything proceding could be done via Ansible -- ####
 
 # Update the OS
 yum update -y
