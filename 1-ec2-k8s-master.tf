@@ -14,8 +14,8 @@
     default=0
   }
  
-  variable "aws_ec2_cloud_init_script" {
-    default="./scripts/install-prereqs.txt"
+  variable "aws_ec2_cloud_init_tpl" {
+    default="./templates/install-prereqs.tpl"
   }
 
   # locally defined or composite variables
@@ -34,7 +34,10 @@
 
   # User-data
   data "template_file" "user_data" {
-    template = file(var.aws_ec2_cloud_init_script)
+    template = file(var.aws_ec2_cloud_init_tpl)
+    vars = {
+      id_rsa_pub = var.ssh_deploy_key
+    }
   }
 
   # Remote Provision Key

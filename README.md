@@ -71,7 +71,7 @@ TF_VAR_aws_subnet_id=
 TF_VAR_aws_iam_instance_profile=
 TF_VAR_aws_ssh_key_name= SSH key managed in AWS
 TF_VAR_aws_ami_name=
-#TF_VAR_aws_ec2_cloud_init_script="./scripts/install-prereqs.txt"
+#TF_VAR_aws_ec2_cloud_init_script="./scripts/install-prereqs.tpl"
 # Default is 1
 TF_VAR_aws_ec2_k8s_master_count=1
 # Default is 0
