@@ -14,6 +14,22 @@
     default=0
   }
  
+  variable "aws_ec2_boot_vol_size" {
+    default=20
+  }
+
+  variable "aws_ebs_k8s_vol_size" {
+    default=100
+  }
+
+  variable "aws_ebs_k8s_vol_type" {
+    default="gp2"
+  }
+  
+  variable "aws_ebs_k8s_vol_device" {
+    default="/dev/sdf"
+  }
+ 
   variable "aws_ec2_cloud_init_tpl" {
     default="./templates/install-prereqs.tpl"
   }
@@ -42,17 +58,17 @@
 
   # Remote Provision Key
   # Public Key must be base64 encoded
-  resource "aws_key_pair" "remote-provision-key" {
-    provider = aws.east
-    key_name = local.deploy_key
-    public_key = base64decode(var.ssh_deploy_key)
-  }
+  #resource "aws_key_pair" "remote-provision-key" {
+  #  provider = aws
+  #  key_name = local.deploy_key
+  #  public_key = base64decode(var.ssh_deploy_key)
+  #}
 
   # Create and bootstrap EC2 in default region
   # sets SSH key from AWS (key_name)  
   # Check the ami-instance type for what user to use to log in.  The default centos7 uses the "centos" user
   resource "aws_instance" "k8s-master" {
-    provider 			= aws.east
+    provider 			= aws
     ami 			= var.aws_ami_id
     instance_type 		= var.k8s-master-instance-type
     key_name			= var.aws_ssh_key_name
@@ -62,19 +78,46 @@
     subnet_id			= var.aws_subnet_id
     user_data			= data.template_file.user_data.rendered
     count			= var.aws_ec2_k8s_master_count
-
+    root_block_device {
+      volume_type = "gp2"
+      volume_size = var.aws_ec2_boot_vol_size
+      delete_on_termination = "true"
+    }
     tags = {
       USER = var.aws_username,
       Name = join("_", [local.k8s-master-hostname, count.index + 1]),
       project = var.aws_project,
-      type = "k8s"
-      subtype = "master"
+      type = "k8s",
+      subtype = "master",
+      Managed_By  =   "Terraform"
+    }
+  }
+
+  # Storage for k8s-masters
+  resource "aws_volume_attachment" "ebs_att_k8s-master" {
+    count 	= var.aws_ec2_k8s_master_count
+    device_name = var.aws_ebs_k8s_vol_device
+    volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
+    instance_id = aws_instance.k8s-master.*.id[count.index]
+  }
+
+  resource "aws_ebs_volume" "ebs_k8s-master_data" {
+    count	      = var.aws_ec2_k8s_master_count
+    availability_zone = element(aws_instance.k8s-master.*.availability_zone, count.index)
+    type	      = var.aws_ebs_k8s_vol_type
+    size              = var.aws_ebs_k8s_vol_size
+    tags = {
+      Name = join("_", [local.k8s-master-hostname, count.index + 1]),
+      project = var.aws_project,
+      type = "k8s",
+      subtype = "master",
+      Managed_By  =   "Terraform"
     }
   }
 
   # Create and bootstrap k8s workers
   resource "aws_instance" "k8s-worker" {
-    provider 			= aws.east
+    provider 			= aws
     ami				= var.aws_ami_id
     instance_type		= var.k8s-worker-instance-type
     key_name			= var.aws_ssh_key_name
@@ -84,17 +127,45 @@
     subnet_id			= var.aws_subnet_id
     user_data			= data.template_file.user_data.rendered
     count			= var.aws_ec2_k8s_worker_count
-
+    root_block_device {
+      volume_type = "gp2"
+      volume_size = var.aws_ec2_boot_vol_size
+      delete_on_termination = "true"
+    }
     tags = {
       USER = var.aws_username
       Name = join("_", [local.k8s-worker-hostname, count.index + 1]),
       project = var.aws_project,
       type = "k8s",
-      subtype = "worker"
+      subtype = "worker",
+      Managed_By  =   "Terraform"
     }
     
     depends_on = [aws_instance.k8s-master]
   }
+
+  # Storage for k8s-workers
+  resource "aws_volume_attachment" "ebs_att_k8s-worker" {
+    count       = var.aws_ec2_k8s_worker_count
+    device_name = var.aws_ebs_k8s_vol_device
+    volume_id   = aws_ebs_volume.ebs_k8s-worker_data.*.id[count.index]
+    instance_id = aws_instance.k8s-worker.*.id[count.index]
+  }
+
+  resource "aws_ebs_volume" "ebs_k8s-worker_data" {
+    count	      = var.aws_ec2_k8s_worker_count
+    availability_zone = element(aws_instance.k8s-worker.*.availability_zone, count.index)
+    type	      = var.aws_ebs_k8s_vol_type
+    size              = var.aws_ebs_k8s_vol_size
+    tags = {
+      Name = join("_", [local.k8s-worker-hostname, count.index + 1]),
+      project = var.aws_project,
+      type = "k8s",
+      subtype = "worker",
+      Managed_By  =   "Terraform"
+    }
+  }
+
 
 
   # Outputs
@@ -111,6 +182,3 @@
         instance.id => instance.private_ip
     }
   }
-
-  
-

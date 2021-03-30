@@ -2,7 +2,18 @@ variable "aws_username" {}
 variable "aws_resource_prefix" {}
 
 variable "aws_region" {
-  default="us-east-1"
+  type = string
+  default = "us-east-1"
+}
+
+variable "aws_availability_zone" {
+  type = string
+  default = "us-east-1a"
+}
+
+variable "profile" {
+  type = string
+  default = "awsk8s"
 }
 
 # global AWS variables

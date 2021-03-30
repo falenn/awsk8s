@@ -4,11 +4,12 @@
 # by running terraform in a docker container, we ease the install.
 #
 
-TERRAFORM_VER=0.14.8
+TERRAFORM_VER=0.14.9
 VARS_FILE=env
 AMI_NAME="/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 
 if [ -e $VARS_FILE ]; then
+  echo "Sourcing envrionment vars file: $VARS_FILE"
   . ./$VARS_FILE
 else
   echo "No file $VARS_FILE found"
@@ -47,6 +48,7 @@ function listLatestAMI() {
 }
 
 function terraform() {
+  echo "PWD: $(pwd)"
   docker run --rm -it \
     -v $(pwd):/terraform \
     -v ~/.aws:/root/.aws \
@@ -56,7 +58,7 @@ function terraform() {
     -w /terraform \
     -v /.terraform.d/plugins/lunix_amd64/:/plugins/ \
     --log-driver=journald \
-    hashicorp/terraform:${TERRAFORM_VER} $@ 
+    hashicorp/terraform:${TERRAFORM_VER} $@
 
 # --entrypoint="/bin/sh"
 # --network=host
