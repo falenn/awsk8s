@@ -13,6 +13,7 @@
   variable "aws_ec2_k8s_worker_count" {
     default=0
   }
+
  
   variable "aws_ec2_cloud_init_tpl" {
     default="./templates/install-prereqs.tpl"
@@ -67,10 +68,32 @@
       USER = var.aws_username,
       Name = join("_", [local.k8s-master-hostname, count.index + 1]),
       project = var.aws_project,
-      type = "k8s"
-      subtype = "master"
+      type = "k8s",
+      subtype = "master",
+      Managed_By  =   "Terraform"
     }
   }
+
+  # Storage for k8s-masters
+  resource "aws_volume_attachment" "ebs_att_k8s-master" {
+    device_name = "/dev/sdf"
+    volume_id   = aws_ebs_volume.ebs_k8s-master_data.id
+    instance_id = aws_instance.k8s-master.id
+
+    tags = {
+      Name = join("_", [local.k8s-master-hostname, count.index + 1]),
+      project = var.aws_project,
+      type = "k8s",
+      subtype = "master",
+      Managed_By  =   "Terraform"
+    }
+  }
+
+  resource "aws_ebs_volume" "ebs_k8s-master_data" {
+    availability_zone = var.aws_availability_zone
+    size              = 100
+  }
+
 
   # Create and bootstrap k8s workers
   resource "aws_instance" "k8s-worker" {
@@ -90,11 +113,33 @@
       Name = join("_", [local.k8s-worker-hostname, count.index + 1]),
       project = var.aws_project,
       type = "k8s",
-      subtype = "worker"
+      subtype = "worker",
+      Managed_By  =   "Terraform"
     }
     
     depends_on = [aws_instance.k8s-master]
   }
+
+  # Storage for k8s-workers
+  resource "aws_volume_attachment" "ebs_att_k8s-worker" {
+    device_name = "/dev/sdf"
+    volume_id   = aws_ebs_volume.ebs_k8s-worker_data.id
+    instance_id = aws_instance.k8s-worker.id
+
+    tags = {
+      Name = join("_", [local.k8s-worker-hostname, count.index + 1]),
+      project = var.aws_project,
+      type = "k8s",
+      subtype = "worker",
+      Managed_By  =   "Terraform"
+    }
+  }
+
+  resource "aws_ebs_volume" "ebs_k8s-worker_data" {
+    availability_zone = var.aws_availability_zone
+    size              = 100
+  }
+
 
 
   # Outputs
