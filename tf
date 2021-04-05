@@ -28,18 +28,24 @@ function listLatestAMI() {
 
   if [ -z "${AMI}" ]; then
     # set from ~/.aws/vars if exists
-    AMI=${DEFAULT_AMI_NAME}
+    AMI=${AMI_NAME}
   fi
 
+  CMD="aws ssm get-parameters \
+       --names $AMI  
+       --region us-east-1"
+  
   # echo "AMI Set: ${AMI}"
 
-  CMD="aws ec2 describe-images \
-    --filters Name=architecture,Values='x86_64' \
-    --filters Name='name',Values='${AMI}'"
+  #CMD="aws ec2 describe-images \
+  #  --filters Name=architecture,Values='x86_64' \
+  #  --filters Name='name',Values='${AMI}'"
 
   ImageJSON="`$CMD`"
+  #echo "$Latest AMI: $ImageJSON"
 
-  imageId=`echo $ImageJSON | jq '.Images[].ImageId'`
+  imageId=`echo $ImageJSON | jq '.Parameters[].Value'`
+  #echo "imageId: $imageId"
 
   # Remove quotes
   temp="${imageId%\"}"
