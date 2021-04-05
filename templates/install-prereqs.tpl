@@ -1,10 +1,30 @@
 #!/bin/bash
 
+#cloud-config
+#cloud_final_modules:
+#- [users-groups,always]
+#users:
+#  - name: username
+#    groups: [ wheel ]
+#    sudo: [ "ALL=(ALL) NOPASSWD:ALL" ]
+#    shell: /bin/bash
+#    ssh-authorized-keys: 
+#    - ssh-rsa AB3nzExample
+#
+#packages:
+# - httpd
+# 
+#runcmd:
+# - [bash, -c, "cmd"]
+# - systemclt start svc
+ 
 ID_RSA_PUB=${id_rsa_pub}
 
 # Setup ec2-user
 useradd ec2-user
-usermod -a -G wheel
+# usermod -a -G wheel
+# instead of adding to wheel, which has PASSWD restriction, just add directly
+echo 'ec2-user ALL=(ALL:ALL) NOPASSWD:ALL' | sudo EDITOR='tee -a' visudo
 
 mkdir -p /home/ec2-user/.ssh
 touch /home/ec2-user/.ssh/authorized_keys
