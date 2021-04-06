@@ -37,12 +37,6 @@ chown -R ec2-user: /home/ec2-user/.ssh
 chmod 700 /home/ec2-user/.ssh
 chmod 600 /home/ec2-user/.ssh/authorized_keys
 
-# Allow members of the wheel group sudo w/o password - modifying /etc/soduers
-#
-#sed -i 's/%wheel[\s\t]+ALL\=\(ALL\)[\s\t]+ALL/# %wheel ALL=\(ALL\) ALL/' /etc/sudoers
-#sed -i 's/#\s%wheel[\s\t]+ALL\=\(ALL\)[\s\t]+NOPASSWD\:\sALL/%wheel ALL=\(ALL\) NOPASSWD: ALL/' /etc/sudoers
-
-
 
 # Update the OS
 yum update -y
