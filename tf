@@ -6,7 +6,10 @@
 
 TERRAFORM_VER=0.14.9
 VARS_FILE=env
-AMI_NAME="/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
+# Default AMI is Amazon AMI using SSM for ami-id resolv
+DEFAULT_AMI_NAME="/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
 
 if [ -e $VARS_FILE ]; then
   echo "Sourcing envrionment vars file: $VARS_FILE"
@@ -25,32 +28,45 @@ function docker() {
 # @TODO Externalize in the future
 function listLatestAMI() {
   AMI=$1
+  CMD=""
+  ImageJSON="{}"
 
+  # if AMI not present, use default
   if [ -z "${AMI}" ]; then
-    # set from ~/.aws/vars if exists
-    AMI=${AMI_NAME}
+    AMI=${DEFAULT_AMI_NAME}
   fi
 
-  CMD="aws ssm get-parameters \
-       --names $AMI  
-       --region us-east-1"
-  
-  # echo "AMI Set: ${AMI}"
+  # echo "Searching for latest AMI-id: $AMI"
 
-  #CMD="aws ec2 describe-images \
-  #  --filters Name=architecture,Values='x86_64' \
-  #  --filters Name='name',Values='${AMI}'"
+  # if AMI name contains SSM path, use one command, else use another
+  if grep -q "\/aws\/service" <<< "$AMI"; then
 
-  ImageJSON="`$CMD`"
-  #echo "$Latest AMI: $ImageJSON"
+    cmd="aws ssm get-parameters --names $AMI --region us-east-1"
+    ImageJSON=`$CMD`
 
-  imageId=`echo $ImageJSON | jq '.Parameters[].Value'`
-  #echo "imageId: $imageId"
+    # echo "Response: $ImageJSON"
+    imageId=`echo $ImageJSON | jq '.Parameters[].Value'`
+  else
+    # echo "Setting MY_AMI_CMD"
 
-  # Remove quotes
-  temp="${imageId%\"}"
-  temp="${temp#\"}"
-  echo "$temp"
+    cmd="aws ec2 describe-images \
+	--filters Name='architecture',Values='x86_64' \
+	--filters Name='name',Values='$AMI'"
+    ImageJSON=`$cmd`
+
+    #echo "Response: $ImageJSON"
+    imageId=`echo $ImageJSON | jq '.Images[].ImageId'`
+  fi
+
+  if [ -z "${imageId}" ]; then
+    #echo "No AMI Found."
+    echo ""   
+  else
+    # Remove quotes
+    temp="${imageId%\"}"
+    temp="${temp#\"}"
+    echo "$temp"
+  fi
 }
 
 function terraform() {
@@ -71,11 +87,18 @@ function terraform() {
 # -v /etc/pki/tls/certs/cacert.crt:/etc/pki/tls/certs/cacert.crt \ 
 }
 
-# Get the current AMI
-AMI_ID=`listLatestAMI $TF_VAR_aws_ami_name`
-echo "AMI ID [$TF_VAR_aws_ami_name]: $AMI_ID"
 
-# printenv
-# echo call terraform
-terraform $@
+
+############ ---- MAIN ---- #############################
+# Get the current AMI
+echo "Getting latest AMI: $TF_VAR_aws_ami_name"
+AMI_ID=`listLatestAMI $TF_VAR_aws_ami_name`
+if [ -z "${AMI_ID}" ]; then
+  echo "No AMI.  Exiting"
+  exit 1
+else
+  echo "AMI ID [$TF_VAR_aws_ami_name]: $AMI_ID"
+  echo "calling terraform"
+  terraform $@
+fi
 
