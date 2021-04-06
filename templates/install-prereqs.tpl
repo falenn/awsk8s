@@ -112,6 +112,15 @@ mkdir -p /home/ec2-user/.kube
 cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
 chown -R ec2-user: /home/ec2-user/.kube
 
+status=1
+
+# wait for k8s to be running
+while [[ $status -ne 0 ]]; do
+  sleep 5s
+  nodes=`/usr/bin/kubectl get nodes`
+  status=$?
+done 
+
 # Make master schedulable
 kubectl taint nodes --all node-role.kubernetes.io/master-
 
