@@ -49,7 +49,10 @@ if [ -z "$1" ]; then
 fi
 
 echo "Storage device:$DEV_NAME partition: $PART_NAME"
+echo "waiting 30 seconds for mount to finish"
+sleep 30s
 
+# install lvm
 sudo yum install -y lvm2
 
 #echo "PATH $PATH"

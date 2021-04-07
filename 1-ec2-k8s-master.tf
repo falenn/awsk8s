@@ -59,8 +59,6 @@
     }
   }
 
-
-
   # Remote Provision Key
   # Public Key must be base64 encoded
   #resource "aws_key_pair" "remote-provision-key" {
@@ -102,7 +100,7 @@
       connection {
         type    = "ssh"
         user    = "ec2-user"
-        host    = aws_instance.k8s-master.*.id[count.index].private_ip
+        host    = self.private_ip
         private_key = file("/root/.ssh/id_rsa")
       }
     }
@@ -128,16 +126,6 @@
     device_name = "/dev/sdf"
     volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
     instance_id = aws_instance.k8s-master.*.id[count.index]
-    provisioner "file" {
-      source      = "scripts/setupStorageLVM.sh"
-      destination = "/tmp/setupStorageLVM.sh"
-      connection {
-        type    = "ssh"
-        user    = "ec2-user"
-        host    = aws_instance.k8s-master.*.id[count.index].private_ip
-        private_key = file("/root/.ssh/id_rsa")
-      }
-    }
     provisioner "remote-exec" {
       inline = [
         "chmod +x /tmp/setupStorageLVM.sh",
@@ -146,7 +134,7 @@
       connection {
         type    = "ssh"
         user    = "ec2-user"
-        host    = aws_instance.k8s-master.*.id[count.index].private_ip
+        host    = aws_instance.k8s-master.*.private_ip[count.index]
         private_key = file("/root/.ssh/id_rsa")
       }
     }
