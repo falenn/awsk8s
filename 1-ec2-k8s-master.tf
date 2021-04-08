@@ -26,10 +26,13 @@
     default="gp2"
   }
   
-  variable "aws_ebs_k8s_vol_device" {
-    default="/dev/sdf"
+  variable "aws_ebs_device" {
+    default="nvme1n1"
   }
- 
+  variable "aws_ebs_device_partition" {
+    default="nvme1n1p1"
+  }
+
   variable "aws_ec2_cloud_init_tpl" {
     default="./templates/install-prereqs.tpl"
   }
@@ -79,7 +82,7 @@
     user_data			= data.template_file.user_data.rendered
     count			= var.aws_ec2_k8s_master_count
     root_block_device {
-      volume_type = "gp2"
+      volume_type = var.aws_ebs_k8s_vol_type
       volume_size = var.aws_ec2_boot_vol_size
       delete_on_termination = "true"
     }
@@ -91,20 +94,22 @@
       subtype = "master",
       Managed_By  =   "Terraform"
     }
+    provisioner "file" {
+      source      = "scripts/setupStorageLVM.sh"
+      destination = "/tmp/setupStorageLVM.sh"
+      connection {
+        type    = "ssh"
+        user    = "ec2-user"
+        host    = self.private_ip
+        private_key = file("/root/.ssh/id_rsa")
+      }
+    }
   }
-
-  # Storage for k8s-masters
-  resource "aws_volume_attachment" "ebs_att_k8s-master" {
-    count 	= var.aws_ec2_k8s_master_count
-    device_name = var.aws_ebs_k8s_vol_device
-    volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
-    instance_id = aws_instance.k8s-master.*.id[count.index]
-  }
-
+  
   resource "aws_ebs_volume" "ebs_k8s-master_data" {
-    count	      = var.aws_ec2_k8s_master_count
+    count             = var.aws_ec2_k8s_master_count
     availability_zone = element(aws_instance.k8s-master.*.availability_zone, count.index)
-    type	      = var.aws_ebs_k8s_vol_type
+    type              = var.aws_ebs_k8s_vol_type
     size              = var.aws_ebs_k8s_vol_size
     tags = {
       Name = join("_", [local.k8s-master-hostname, count.index + 1]),
@@ -114,6 +119,28 @@
       Managed_By  =   "Terraform"
     }
   }
+  
+  # Storage for k8s-masters
+  resource "aws_volume_attachment" "ebs_att_k8s-master" {
+    count 	= var.aws_ec2_k8s_master_count
+    device_name = "/dev/sdf"
+    volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
+    instance_id = aws_instance.k8s-master.*.id[count.index]
+    provisioner "remote-exec" {
+      inline = [
+        "chmod +x /tmp/setupStorageLVM.sh",
+        "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}",
+      ]
+      connection {
+        type    = "ssh"
+        user    = "ec2-user"
+        host    = aws_instance.k8s-master.*.private_ip[count.index]
+        private_key = file("/root/.ssh/id_rsa")
+      }
+    }
+  }
+
+
 
   # Create and bootstrap k8s workers
   resource "aws_instance" "k8s-worker" {
@@ -128,7 +155,7 @@
     user_data			= data.template_file.user_data.rendered
     count			= var.aws_ec2_k8s_worker_count
     root_block_device {
-      volume_type = "gp2"
+      volume_type = var.aws_ebs_k8s_vol_type
       volume_size = var.aws_ec2_boot_vol_size
       delete_on_termination = "true"
     }
@@ -147,7 +174,7 @@
   # Storage for k8s-workers
   resource "aws_volume_attachment" "ebs_att_k8s-worker" {
     count       = var.aws_ec2_k8s_worker_count
-    device_name = var.aws_ebs_k8s_vol_device
+    device_name = "/dev/sdf"
     volume_id   = aws_ebs_volume.ebs_k8s-worker_data.*.id[count.index]
     instance_id = aws_instance.k8s-worker.*.id[count.index]
   }

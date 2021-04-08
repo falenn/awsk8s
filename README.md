@@ -100,8 +100,12 @@ Each file declares and uses variables, so in the given file.
 # Options for AWS vars
 store in ~/.aws/config
 
+# example profile
 [profile dev-full-access]
-role_arn = arn:aws:iam::123456789012:role/dev-full-access
+role_arn = arn:aws:iam::12345678:role/dev-full-access
+needs policies such as:
+action: Allow, IAM:PassRole
+
 
 # terraform.tfvars
 will load this file if present.  Can .gitignore for safety

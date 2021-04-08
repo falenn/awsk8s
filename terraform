@@ -40,8 +40,8 @@ function listLatestAMI() {
 
   # if AMI name contains SSM path, use one command, else use another
   if grep -q "\/aws\/service" <<< "$AMI"; then
-
-    cmd="aws ssm get-parameters --names $AMI --region us-east-1"
+    #echo "SSM query... $AMI" 
+    CMD="aws ssm get-parameters --names $AMI --region us-east-1"
     ImageJSON=`$CMD`
 
     # echo "Response: $ImageJSON"
@@ -49,10 +49,10 @@ function listLatestAMI() {
   else
     # echo "Setting MY_AMI_CMD"
 
-    cmd="aws ec2 describe-images \
+    CMD="aws ec2 describe-images \
 	--filters Name='architecture',Values='x86_64' \
 	--filters Name='name',Values='$AMI'"
-    ImageJSON=`$cmd`
+    ImageJSON=`$CMD`
 
     #echo "Response: $ImageJSON"
     imageId=`echo $ImageJSON | jq '.Images[].ImageId'`

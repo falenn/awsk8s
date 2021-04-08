@@ -37,12 +37,6 @@ chown -R ec2-user: /home/ec2-user/.ssh
 chmod 700 /home/ec2-user/.ssh
 chmod 600 /home/ec2-user/.ssh/authorized_keys
 
-# Allow members of the wheel group sudo w/o password - modifying /etc/soduers
-#
-#sed -i 's/%wheel[\s\t]+ALL\=\(ALL\)[\s\t]+ALL/# %wheel ALL=\(ALL\) ALL/' /etc/sudoers
-#sed -i 's/#\s%wheel[\s\t]+ALL\=\(ALL\)[\s\t]+NOPASSWD\:\sALL/%wheel ALL=\(ALL\) NOPASSWD: ALL/' /etc/sudoers
-
-
 
 # Update the OS
 yum update -y
@@ -118,13 +112,25 @@ mkdir -p /home/ec2-user/.kube
 cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
 chown -R ec2-user: /home/ec2-user/.kube
 
+# become the ec2-user
+sudo su - ec2-user
+
+status=1
+
+# wait for k8s to be running
+while [[ $status -ne 0 ]]; do
+  sleep 5s
+  nodes=`/usr/bin/kubectl get nodes`
+  status=$?
+done 
+
 # Make master schedulable
-kubectl taint nodes --all node-role.kubernetes.io/master-
+/usr/bin/kubectl taint nodes --all node-role.kubernetes.io/master-
 
 # install CNI
 #kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 #kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
 
 # install weave CNI
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+/usr/bin/kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 

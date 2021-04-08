@@ -12,7 +12,8 @@ id_rsa.pub
 plan.out
 
 #terraform state
-terraform*
+terraform.tfstate
+terraform.tfstate.*
 
 #private vars for terraform
 env
