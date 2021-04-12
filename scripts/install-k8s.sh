@@ -26,18 +26,4 @@ sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 
 sudo systemctl enable --now kubelet
-
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all
-
-mkdir -p ~/.kube
-sudo cp -i /etc/kubernetes/admin.conf ~/.kube/config
-sudo chown ec2-user: ~/.kube/config
-kubectl taint nodes --all node-role.kubernetes.io/master-
-
-# install CNI
-#kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-#kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
-
-# install weave CNI
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-
+#sudo kubeadm config images pull

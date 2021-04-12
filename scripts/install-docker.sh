@@ -16,19 +16,7 @@ sudo mkdir /etc/docker
 sudo yum install docker -y
 sudo usermod -a -G docker ec2-user
 sudo mkdir /etc/docker
-sudo bash -c 'cat << EOF > /etc/docker/daemon.json 
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ]
-}
-EOF'
+sudo mkdir -p /data/docker
 
 sudo mkdir -p /etc/systemd/system/docker.service.d
 sudo systemctl daemon-reload
