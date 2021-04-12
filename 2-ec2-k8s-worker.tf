@@ -34,7 +34,6 @@
         private_key = file("/root/.ssh/id_rsa")
       }
     }
-    depends_on = [aws_instance.k8s-master]
   }
 
   resource "aws_ebs_volume" "ebs_k8s-worker_data" {
@@ -65,7 +64,7 @@
       connection {
         type    = "ssh"
         user    = "ec2-user"
-        host    = aws_instance.k8s-master.*.private_ip[count.index]
+        host    = aws_instance.k8s-worker.*.private_ip[count.index]
         private_key = file("/root/.ssh/id_rsa")
       }
     }
