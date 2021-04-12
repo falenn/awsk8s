@@ -1,12 +1,22 @@
 #!/bin/bash
-yum update -y
+
+
+sudo yum update -y
+
+# Install Docker
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install -y containerd.io-1.2.13 docker-ce-19.03.11 docker-ce-cli-19.03.11
+sudo usermod -a -G docker ec2-user
+
+sudo mkdir /etc/docker
+
 
 # replace the following with ansible playbook
 #Docker 
-yum install docker -y
-usermod -a -G docker ec2-user
-mkdir /etc/docker
-cat <<EOF | tee /etc/docker/daemon.json 
+sudo yum install docker -y
+sudo usermod -a -G docker ec2-user
+sudo mkdir /etc/docker
+sudo bash -c 'cat << EOF > /etc/docker/daemon.json 
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
@@ -18,10 +28,10 @@ cat <<EOF | tee /etc/docker/daemon.json
     "overlay2.override_kernel_check=true"
   ]
 }
-EOF
+EOF'
 
-mkdir -p /etc/systemd/system/docker.service.d
-systemctl daemon-reload
-systemctl restart docker
-systemctl enable docker
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker
 
