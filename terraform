@@ -19,9 +19,9 @@ else
 fi
 
 # helper
-function docker() {
-  sudo docker $@
-}
+#function docker() {
+#  sudo docker $@
+#}
 
 
 # Because of the fixed nature of the env, the params are set for the amis we see.

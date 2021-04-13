@@ -18,10 +18,13 @@ resource "null_resource" "k8s-install-master" {
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/install-k8s.sh",
+      "chmod u+x /tmp/install-k8s.sh",
       "/tmp/install-k8s.sh"
     ]
   }
+  depends_on = [
+    null_resource.docker-install-master
+  ]
 }
 
 resource "null_resource" "k8s-install-worker" {
@@ -42,10 +45,13 @@ resource "null_resource" "k8s-install-worker" {
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/install-k8s.sh",
+      "chmod u+x /tmp/install-k8s.sh",
       "/tmp/install-k8s.sh"
     ]
   }
+  depends_on = [
+    null_resource.docker-install-worker
+  ]
 }
 
 resource "null_resource" "k8s-setup" {
@@ -65,13 +71,16 @@ resource "null_resource" "k8s-setup" {
   }
   provisioner "remote-exec" {
     inline = [
-      "sudo /bin/kubeadm init --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all",
+      "sudo /usr/bin/kubeadm init --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all",
       "mkdir -p /home/ec2-user/.kube",
       "sudo cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config",
       "sudo chown ec2-user:ec2-user /home/ec2-user/.kube/config",
-      "/bin/kubectl taint nodes --all node-role.kubernetes.io/master-",
-      "/bin/kubectl apply -f /tmp/tigera-operator.yaml",
-      "/bin/kubectl apply -f /tmp/custom-resources.yaml"
+      "/usr/bin/kubectl taint nodes --all node-role.kubernetes.io/master-",
+      "/usr/bin/kubectl apply -f /tmp/tigera-operator.yaml",
+      "/usr/bin/kubectl apply -f /tmp/custom-resources.yaml"
     ]
   }
+  depends_on = [
+    null_resource.k8s-install-master
+  ]
 }
