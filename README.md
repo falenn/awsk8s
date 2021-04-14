@@ -131,7 +131,7 @@ TF_VAR_docker_password=
 TF_VAR_docker_proxy=
 # private registry
 TF_VAR_docker_registry=
-# username/pwd as encoded when viewed in key.json after login
+# username/pwd as encoded when viewed in ~/.docker/config.json after login
 TF_VAR_docker_encoded_auth="ddd" 
 TF_VAR_ssh_deploy_key=  ->>>>   cat ~/.ssh/id_rsa.pub | base64
 
