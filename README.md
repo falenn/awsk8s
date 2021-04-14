@@ -1,8 +1,54 @@
 # K8s on AWS
 
 ## About
-This project uses Terraform to spin up infrastructure on AWS.  Goal is to stand up infrstructure and then defer to Ansible.  This terraform instance is a wrapper around Docker execution of hashicorp/terraform:<ver>!  There is no Terraform or Python installation dependency.
+This project uses Terraform to spin up infrastructure on AWS.  This terraform instance is a wrapper around Docker execution of hashicorp/terraform:<ver>!  There is no Terraform or Python installation dependency.  
 
+## Quickstart
+
+To use this k8s installer, do the following:
+1.  First, ensure 
+1.  Setup your env file
+In the directory where you have cloned this project, create a key=value file of required environment vars:
+```
+vi env
+ - follow the steps below about env setup
+```
+2. Install Docker if you don't have it installed already
+```
+# add repo
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+# install
+sudo yum install -y containerd.io-1.2.13 docker-ce-19.03.11 docker-ce-cli-19.03.11
+
+# enable docker service
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker
+```
+2. Add yourself to the Docker group
+```
+sudo usermod -a -G docker $USER
+```
+2. Init your terraform project
+```
+./terraform init
+```
+Plan the terraform deployment
+```
+./terraform plan --out plan.out
+```
+Deploy!
+```
+./terraform apply plan.out
+```
+
+Do some work...
+
+Destroy!
+```
+./terraform destroy
+```
 
 ## Terraform Approach
 Following: https://blog.smartlogic.io/how-i-organize-terraform-modules-off-the-beaten-path/

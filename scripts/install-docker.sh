@@ -1,37 +1,39 @@
 #!/bin/bash
 
+# exit when any command fails
+set -e
 
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
+# update first
 sudo yum update -y
 
-# Install Docker
+# Ensure data directory can be created
+status=1
+while [[ $status -ne 0 ]]; do
+  sudo mkdir -p /data/docker
+  status=$?
+  if [[ $status -ne 0 ]]; then
+    sleep 5;
+  else
+
+# add repo
 sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+# install
 sudo yum install -y containerd.io-1.2.13 docker-ce-19.03.11 docker-ce-cli-19.03.11
-sudo usermod -a -G docker ec2-user
 
-sudo mkdir /etc/docker
-
-
-# replace the following with ansible playbook
-#Docker 
-sudo yum install docker -y
-sudo usermod -a -G docker ec2-user
-sudo mkdir /etc/docker
-sudo bash -c 'cat << EOF > /etc/docker/daemon.json 
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ]
-}
-EOF'
-
+# enable docker service
 sudo mkdir -p /etc/systemd/system/docker.service.d
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 sudo systemctl enable docker
+
+# update user group
+sudo usermod -a -G docker ec2-user
+
+  fi
+done
 
