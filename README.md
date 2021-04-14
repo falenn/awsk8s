@@ -108,20 +108,31 @@ $ export TF_VAR_image_id=ami-abc123'
 
 Variables that are currently expected:
 ```
-[clbates@ip-10-117-149-36 awsk8s (main *%=)]$ vi env 
+$ vi env 
 TF_VAR_aws_username=$USER
 TF_VAR_aws_resource_prefix=
-TF_VAR_aws_project
+TF_VAR_aws_project=
+# TF_VAR_aws_region="us-east-1" is default
+# TF_VAR_aws_vpc_id="" is presupposed when VPC is already existing
 TF_VAR_aws_security_group_id=
 TF_VAR_aws_subnet_id=
 TF_VAR_aws_iam_instance_profile=
 TF_VAR_aws_ssh_key_name= SSH key managed in AWS
+# name of AMI image to use for ec2 instance
 TF_VAR_aws_ami_name=
-#TF_VAR_aws_ec2_cloud_init_script="./scripts/install-prereqs.tpl"
 # Default is 1
 TF_VAR_aws_ec2_k8s_master_count=1
 # Default is 0
 TF_VAR_aws_ec2_k8s_worker_count=1
+# dockerhub username
+TF_VAR_docker_username=
+TF_VAR_docker_password=
+# docker mirrored-proxies
+TF_VAR_docker_proxy=
+# private registry
+TF_VAR_docker_registry=
+# username/pwd as encoded when viewed in key.json after login
+TF_VAR_docker_encoded_auth="ddd" 
 TF_VAR_ssh_deploy_key=  ->>>>   cat ~/.ssh/id_rsa.pub | base64
 
 ```
