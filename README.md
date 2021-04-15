@@ -46,11 +46,24 @@ TF_VAR_ssh_deploy_key=<base64 encoded public key>
 ```
 
 Variable Description
-| Variable  | Example | Type  | AWS Reference |
+| Variable  | Example | Type  | AWS Reference or Description |
 | :---      | :---    | :---  | :---      |
-| TF_VAR_aws_username | $USER | String, no quotes |
-| TF_VAR_aws_resource_prefix | $USER | String, no quotes |
-| TF_VAR_aws_project | my-project | String, no quotes | 
+| TF_VAR_aws_username | $USER | String, no quotes | AWS Label |
+| TF_VAR_aws_resource_prefix | $USER | String, no quotes | AWS Label |
+| TF_VAR_aws_project | my-project | String, no quotes | AWS Label |
+| TF_VAR_aws_subnet_id | subnet-1234567890abcdef | AWS subnet ID | EC2 > Network & Security > Subnets |
+| TF_VAR_aws_security_group_id | sg-1234567890abcdef | AWS Security Group ID | EC2 > Network & Security > Security Groups |
+| TF_VAR_aws_iam_instance_profile | myks-user-profile | AWS IAM Role | IAM > Roles |
+| TF_VAR_aws_ssh_key_name | my_ssh_key | String, no quotes | EC2 > Network & Security > Kye Pairs | 
+| TF_VAR_aws_ami_name | "My_AMI_CentOS7*" | String | EC2 > Images > AMIs |
+| TF_VAR_aws_ec2_k8s_master_count | 1 | number | Number of nodes to create | 
+| TF_VAR_aws_ec2_k8s_worker_count | 1 | number | NUmber of nodes to create |
+| TF_VAR_ssh_deploy_key | c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQV... | String, no quotes | base64 encoded id_rsa.pub | 
+| TF_VAR_docker_username | myname | String, no quotes | Dockerhub.com \ docker.io account name|
+| TF_VAR_docker_passwrod | password | String, no quotes | docker.io passwd - don't like this. Can omit and provide when prompted by Terraform|
+| TF_VAR_docker_proxy | https://locationtomirror.com | URL String, no quotes | See Docker daemon.json, registry-mirrors |
+| TF_VAR_docker_registry | https://locationofprivatepregistry.com | URL String, no quotes | Alternate registry, private registry |
+| TF_VAR_docker_encoded_auth | "1234567890abcdef=" | String with Quotes | encoded username, pwd for Docker login - take from ~/.docker/config.json after logging in.  Used to access Docker registry | 
 
 2. Install Docker if you don't have it installed already
 ```
