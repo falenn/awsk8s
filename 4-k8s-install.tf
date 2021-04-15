@@ -1,5 +1,25 @@
 # install Kubernetes
 
+# already defined in docker install tf
+# variable "docker_registry" {}
+
+# This is the encoded form of username / pwd created when written to docker key.json or .docker/config.json
+variable "docker_encoded_auth" {}
+
+variable "docker_config_json_tpl" {
+  default="./templates/docker/config.json.tpl"
+}
+
+#render the daemon.json
+data "template_file" "docker_config_json" {
+  template = file(var.docker_config_json_tpl)
+  vars = {
+    REGISTRY = var.docker_registry
+    AUTH = var.docker_encoded_auth
+  }
+}
+
+
 resource "null_resource" "k8s-install-master" {
   
   count = var.aws_ec2_k8s_master_count
@@ -16,10 +36,16 @@ resource "null_resource" "k8s-install-master" {
     source = "scripts/install-k8s.sh"
     destination = "/tmp/install-k8s.sh"
   }
+  provisioner "file" {
+    content = data.template_file.docker_config_json.rendered
+    destination = "/tmp/config.json"
+  }
   provisioner "remote-exec" {
     inline = [
       "chmod u+x /tmp/install-k8s.sh",
-      "/tmp/install-k8s.sh"
+      "/tmp/install-k8s.sh",
+      "sudo mkdir -p /var/lib/kubelet",
+      "sudo cp /tmp/config.json /var/lib/kubelet/config.json"
     ]
   }
   depends_on = [
@@ -43,10 +69,15 @@ resource "null_resource" "k8s-install-worker" {
     source = "scripts/install-k8s.sh"
     destination = "/tmp/install-k8s.sh"
   }
+  provisioner "file" {
+    content = data.template_file.docker_config_json.rendered
+    destination = "/tmp/config.json"
+  }
   provisioner "remote-exec" {
     inline = [
       "chmod u+x /tmp/install-k8s.sh",
-      "/tmp/install-k8s.sh"
+      "/tmp/install-k8s.sh",
+      "sudo cp /tmp/config.json /usr/lib/kubelet/config.json"
     ]
   }
   depends_on = [

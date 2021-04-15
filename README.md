@@ -163,7 +163,60 @@ which is useful when wrapping terraform apply, etc. with bash automation.
 ```
 $ export TF_VAR_image_id=ami-abc123'
 ```
+<<<<<<< HEAD
+
+Variables that are currently expected:
+```
+$ vi env 
+TF_VAR_aws_username=$USER
+TF_VAR_aws_resource_prefix=
+TF_VAR_aws_project=
+# TF_VAR_aws_region="us-east-1" is default
+# TF_VAR_aws_vpc_id="" is presupposed when VPC is already existing
+TF_VAR_aws_security_group_id=
+TF_VAR_aws_subnet_id=
+TF_VAR_aws_iam_instance_profile=
+TF_VAR_aws_ssh_key_name= SSH key managed in AWS
+# name of AMI image to use for ec2 instance
+TF_VAR_aws_ami_name=
+# Default is 1
+TF_VAR_aws_ec2_k8s_master_count=1
+# Default is 0
+TF_VAR_aws_ec2_k8s_worker_count=1
+# dockerhub username
+TF_VAR_docker_username=
+TF_VAR_docker_password=
+# docker mirrored-proxies
+TF_VAR_docker_proxy=
+# private registry
+TF_VAR_docker_registry=
+# username/pwd as encoded when viewed in ~/.docker/config.json after login
+TF_VAR_docker_encoded_auth="ddd" 
+TF_VAR_ssh_deploy_key=  ->>>>   cat ~/.ssh/id_rsa.pub | base64
+
+```
+
+
+
+# Symlinks
+__ - double-underscore is a convenient prefix to denote a symlinked file - Terraform has no prob following this
+
+# Consequences
+## Where do I start reading?
+At the beginning!  List the dir- treat it as a table of contents.
+## Where do I add something?
+Where it makes logical sense.  Follow the (n+1)-bar.tf strategy
+## If I remove something, what might I break?
+Anything greater than n - the file you remove - will most-likely break.
+## Where should I check to see if a variable is used?
+Each file declares and uses variables, so in the given file.
+## Where does a dependent resource come from?
+(n-1)-bar.tf
+
+# Options for AWS vars
+=======
 ### Options for AWS vars
+>>>>>>> main
 store in ~/.aws/config
 
 ##### example profile

@@ -1,5 +1,9 @@
+variable "docker_proxy" {
+  default="https://hub.docker.com"
+}
+
 variable "docker_registry" {
-  default="https://hub.docker.com/"
+  default="https://hub.docker.com"
 }
 
 variable "docker_username" {}
@@ -16,7 +20,7 @@ variable "docker_daemon_json_tpl" {
 data "template_file" "docker_daemon_json" {
   template = file(var.docker_daemon_json_tpl)
   vars = {
-    docker_registry = var.docker_registry
+    docker_registry = var.docker_proxy
     docker_data_directory = var.docker_data_directory
   }
 }
@@ -60,9 +64,9 @@ resource "null_resource" "docker-install-master" {
   provisioner "remote-exec" {
     inline = [
       "chmod u+x /tmp/install-docker.sh",
-      "sudo cp /tmp/daemon.json /etc/docker/daemon.json",
       "sudo chown root:root /etc/docker/daemon.json",
       "/tmp/install-docker.sh",
+      "sudo cp /tmp/daemon.json /etc/docker/daemon.json",
       "sudo systemctl restart docker",
       "sudo docker login ${var.docker_registry} --username ${var.docker_username} --password ${var.docker_password}"
     ]
