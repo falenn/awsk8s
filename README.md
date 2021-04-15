@@ -45,6 +45,12 @@ TF_VAR_aws_ec2_k8s_worker_count=1
 TF_VAR_ssh_deploy_key=<base64 encoded public key>
 ```
 
+Variable Description
+| Variable  | Example | Type  | AWS Reference |
+| :---      | :---    | :---  | :---      |
+| TF_VAR_aws_username | $USER | String, no quotes |
+| TF_VAR_aws_resource_prefix | $USER | String, no quotes |
+| TF_VAR_aws_project | my-project | String, no quotes | 
 
 2. Install Docker if you don't have it installed already
 ```
