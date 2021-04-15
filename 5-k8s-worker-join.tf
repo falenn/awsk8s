@@ -1,12 +1,5 @@
-variable "s3_k8s_jointoken_bucket" {
-  default="NONE"
-}
-variable "s3_k8s_join_filename" {
-  default="joincmd"
-}
 
-
-resource "null_resource" "k8s-install-worker" {
+resource "null_resource" "k8s-worker-join" {
 
   count = var.aws_ec2_k8s_worker_count
   triggers = {
