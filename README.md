@@ -4,15 +4,67 @@
 This project uses Terraform to spin up infrastructure on AWS.  This terraform instance is a wrapper around Docker execution of hashicorp/terraform:<ver>!  There is no Terraform or Python installation dependency.  
 
 ## Quickstart
-
 To use this k8s installer, do the following:
-1.  First, ensure 
 1.  Setup your env file
-In the directory where you have cloned this project, create a key=value file of required environment vars:
+2.  Install Docker on your local machine
+3.  Run Terraform Commands!
+
+### 1. Setting up Your env file
+In the directory where you have cloned this project, create a key=value file of required environment vars named env.  
+This file is ignored in the .gitignore.
+
+Example env file:
 ```
-vi env
- - follow the steps below about env setup
+TF_VAR_aws_username=$USER
+TF_VAR_aws_resource_prefix=$USER
+TF_VAR_aws_project=my-project
+
+# AWS Infrastructure required information
+# The subnet to deploy the ec2 instances to
+TF_VAR_aws_subnet_id=<from AWS>
+# The firewall rules to apply
+TF_VAR_aws_security_group_id=<from AWS>
+# The conveyence of any rights to the ec2 instance (e.g., access to the AWS CLI and various elements)
+TF_VAR_aws_iam_instance_profile=<from AWS, e.g., myk8s-user-profile>
+# The SSH key to use from AWS-managed keys
+# This is currently not used for login since we normalize the access to the ec2-user.  Not all AMIs present the same standard login user.
+TF_VAR_aws_ssh_key_name= SSH key managed in AWS
+
+# AMI to use for instance creation
+TF_VAR_aws_ami_name=<from AWS, e.g., "MY_AMI_CentOS7*">
+
+# Instance Counts
+# Default is 1
+TF_VAR_aws_ec2_k8s_master_count=1
+# Default is 0
+TF_VAR_aws_ec2_k8s_worker_count=1
+
+# The local SSH key to use - first must base64 encode the public key
+# cat ~/.ssh/id_rsa.pub | base64
+# paste that value here
+TF_VAR_ssh_deploy_key=<base64 encoded public key>
 ```
+
+Variable Description
+| Variable  | Example | Type  | AWS Reference or Description |
+| :---      | :---    | :---  | :---      |
+| TF_VAR_aws_username | $USER | String, no quotes | AWS Label |
+| TF_VAR_aws_resource_prefix | $USER | String, no quotes | AWS Label |
+| TF_VAR_aws_project | my-project | String, no quotes | AWS Label |
+| TF_VAR_aws_subnet_id | subnet-1234567890abcdef | AWS subnet ID | EC2 > Network & Security > Subnets |
+| TF_VAR_aws_security_group_id | sg-1234567890abcdef | AWS Security Group ID | EC2 > Network & Security > Security Groups |
+| TF_VAR_aws_iam_instance_profile | myks-user-profile | AWS IAM Role | IAM > Roles |
+| TF_VAR_aws_ssh_key_name | my_ssh_key | String, no quotes | EC2 > Network & Security > Kye Pairs | 
+| TF_VAR_aws_ami_name | "My_AMI_CentOS7*" | String | EC2 > Images > AMIs |
+| TF_VAR_aws_ec2_k8s_master_count | 1 | number | Number of nodes to create | 
+| TF_VAR_aws_ec2_k8s_worker_count | 1 | number | NUmber of nodes to create |
+| TF_VAR_ssh_deploy_key | c3NoLXJzYSBBQUFBQjNOemFDMXlj... | String, no quotes | base64 encoded id_rsa.pub | 
+| TF_VAR_docker_username | myname | String, no quotes | Dockerhub.com \ docker.io account name|
+| TF_VAR_docker_passwrod | password | String, no quotes | docker.io passwd - don't like this. Can omit and provide when prompted by Terraform|
+| TF_VAR_docker_proxy | https://locationtomirror.com | URL String, no quotes | See Docker daemon.json, registry-mirrors |
+| TF_VAR_docker_registry | https://locationofprivatepregistry.com | URL String, no quotes | Alternate registry, private registry |
+| TF_VAR_docker_encoded_auth | "1234567890abcdef=" | String with Quotes | encoded username, pwd for Docker login - take from ~/.docker/config.json after logging in.  Used to access Docker registry | 
+
 2. Install Docker if you don't have it installed already
 ```
 # add repo
@@ -26,11 +78,12 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 sudo systemctl enable docker
 ```
-2. Add yourself to the Docker group
+Add yourself to the Docker group
 ```
 sudo usermod -a -G docker $USER
 ```
-2. Init your terraform project
+3. Run Terraform Commands!
+Init your terraform project
 ```
 ./terraform init
 ```
@@ -50,22 +103,26 @@ Destroy!
 ./terraform destroy
 ```
 
+# Appendix
 ## Terraform Approach
 Following: https://blog.smartlogic.io/how-i-organize-terraform-modules-off-the-beaten-path/
 Terraform is structured a little differently for better readability.  
 
-In summary:
-1. Each file is treated as its own module.  Each file contains:
-1.1 Goal Resources
-1.2 Dependencies
-1.2.1 Any required variables
-1.2.2 Any locals
-1.3 Required providers
-1.4 Any output
-
+1. Isolate files as much as possible
 Principle: Scope of the file contains the things that make sense to delete at once - an atomic unit.
 
-2. Order these files lexographically such that 
+Each file is treated as its own module.  Each file contains:
+* Goal Resources
+* Dependencies
+* Any required variables
+* Any locals
+* Required providers
+* Any output
+
+
+
+2. Order these files lexographically such that they execute in a predictable order
+Principle: Easy mechanism to replace order of causality.
 ```
 ls | xargs cat
 ```
@@ -81,19 +138,20 @@ Although not desirable, here is a pragmatic practice:
 
 Notice, duplicative numberis is possible for mutually-exclusive componetry!  
 
-Principle: Easy mechanism to replace order of causality.
+3. Consequences of the Approach - if done correctly
+## Where do I start reading?
+At the beginning!  List the dir- treat it as a table of contents.
+## Where do I add something?
+Where it makes logical sense.  Follow the (n+1)-bar.tf strategy
+## If I remove something, what might I break?
+Anything greater than n - the file you remove - will most-likely break.
+## Where should I check to see if a variable is used?
+Each file declares and uses variables, so in the given file.
+## Where does a dependent resource come from?
+(n-1)-bar.tf
 
-# Variables
-## Constants
-__constants.tf - variable locals block that is replayed as though we never expect it to be overriden
-## Global references
-_inputs_subnets.tf
-_inputs_dnsname.tf
-## Global Outputs
-_output_foo.tf
-## Local Variables
 
-## Environment Vars
+## Variables
 Variables can be asserted on the command line:
 ```
 terraform apply -var-file="key=value"
@@ -105,6 +163,7 @@ which is useful when wrapping terraform apply, etc. with bash automation.
 ```
 $ export TF_VAR_image_id=ami-abc123'
 ```
+<<<<<<< HEAD
 
 Variables that are currently expected:
 ```
@@ -155,15 +214,24 @@ Each file declares and uses variables, so in the given file.
 (n-1)-bar.tf
 
 # Options for AWS vars
+=======
+### Options for AWS vars
+>>>>>>> main
 store in ~/.aws/config
 
-# example profile
+##### example profile
 [profile dev-full-access]
 role_arn = arn:aws:iam::12345678:role/dev-full-access
 needs policies such as:
 action: Allow, IAM:PassRole
 
 
-# terraform.tfvars
+### terraform.tfvars
 will load this file if present.  Can .gitignore for safety
+
+
+
+## Symlinks
+__ - double-underscore is a convenient prefix to denote a symlinked file - Terraform has no prob following this
+
 
