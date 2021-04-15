@@ -43,3 +43,6 @@ chown -R ec2-user: /home/ec2-user/.ssh
 chmod 700 /home/ec2-user/.ssh
 chmod 600 /home/ec2-user/.ssh/authorized_keys
 
+# install aws cli
+yum install -y awscli
+
