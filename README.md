@@ -58,7 +58,7 @@ Variable Description
 | TF_VAR_aws_ami_name | "My_AMI_CentOS7*" | String | EC2 > Images > AMIs |
 | TF_VAR_aws_ec2_k8s_master_count | 1 | number | Number of nodes to create | 
 | TF_VAR_aws_ec2_k8s_worker_count | 1 | number | NUmber of nodes to create |
-| TF_VAR_ssh_deploy_key | c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQV... | String, no quotes | base64 encoded id_rsa.pub | 
+| TF_VAR_ssh_deploy_key | c3NoLXJzYSBBQUFBQjNOemFDMXlj... | String, no quotes | base64 encoded id_rsa.pub | 
 | TF_VAR_docker_username | myname | String, no quotes | Dockerhub.com \ docker.io account name|
 | TF_VAR_docker_passwrod | password | String, no quotes | docker.io passwd - don't like this. Can omit and provide when prompted by Terraform|
 | TF_VAR_docker_proxy | https://locationtomirror.com | URL String, no quotes | See Docker daemon.json, registry-mirrors |
