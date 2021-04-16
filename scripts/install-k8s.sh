@@ -3,9 +3,6 @@
 # exit when any command fails
 set -e
 
-S3_IMAGE_URI=$1
-S3_IMAGE_FILENAME=$2
-
 
 # keep track of the last executed command
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -31,27 +28,7 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cl
 exclude=kubelet kubeadm kubectl
 EOF
 
-# prep host with docker image import for S3
-echo "Checking for cache available at s3"
-if [ -z $S3_IMAGE_URI ]; then
-  echo "S3 image cache bucket: $S3_IMAGE_URI"
-  if [ "$S3_IMAGE_URI" -ne "NONE" ]; then
-    # copy files from S3 cache
-    mkdir -p /tmp/docker
-    /usr/bin/aws s3 cp $S3_IMAGE_URI/ /tmp/docker --recursive
-    
-    # load into docker
-    sudo docker load -i /tmp/docker/${S3_IMAGE_FILENAME}.tar
-    
-    # retag imported images
-    while read REPOSITORY TAG IMAGE_ID
-    do
-        echo "== Tagging $REPOSITORY $TAG $IMAGE_ID =="
-        sudo docker tag "$IMAGE_ID" "$REPOSITORY:$TAG"
-    done < ${S3_IMAGE_FILENAME}.list
 
-  fi
-fi
 # dir prep
 sudo mkdir -p /etc/cni/net.d
 

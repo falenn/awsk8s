@@ -54,13 +54,19 @@ resource "null_resource" "k8s-install-master" {
     destination = "/tmp/install-k8s.sh"
   }
   provisioner "file" {
+    source = "scripts/s3LoadDockerCache.sh"
+    destination = "/tmp/s3LoadDockerCache.sh"
+  } 
+  provisioner "file" {
     content = data.template_file.docker_config_json.rendered
     destination = "/tmp/config.json"
   }
   provisioner "remote-exec" {
     inline = [
+      "chmod u+x /tmp/s3LoadDockerCache.sh",
+      "/tmp/s3LoadDockerCache.sh -b ${var.s3_k8s_image_bucket} -o ${var.s3_k8s_image_filename}",
       "chmod u+x /tmp/install-k8s.sh",
-      "/tmp/install-k8s.sh ${var.s3_k8s_image_bucket} ${var.s3_k8s_image_filename}",
+      "/tmp/install-k8s.sh",
       "sudo mkdir -p /var/lib/kubelet",
       "sudo cp /tmp/config.json /var/lib/kubelet/config.json"
     ]
@@ -87,15 +93,21 @@ resource "null_resource" "k8s-install-worker" {
     destination = "/tmp/install-k8s.sh"
   }
   provisioner "file" {
+    source = "scripts/s3LoadDockerCache.sh"
+    destination = "/tmp/s3LoadDockerCache.sh"
+  }
+  provisioner "file" {
     content = data.template_file.docker_config_json.rendered
     destination = "/tmp/config.json"
   }
   provisioner "remote-exec" {
     inline = [
+      "chmod u+x /tmp/s3LoadDockerCache.sh",
+      "/tmp/s3LoadDockerCache.sh -b ${var.s3_k8s_image_bucket} -o ${var.s3_k8s_image_filename}",
       "chmod u+x /tmp/install-k8s.sh",
-      "/tmp/install-k8s.sh ${var.s3_k8s_image_bucket} ${var.s3_k8s_image_filename}",
+      "/tmp/install-k8s.sh",
       "sudo mkdir -p /var/lib/kubelet",
-      "sudo cp /tmp/config.json /usr/lib/kubelet/config.json"
+      "sudo cp /tmp/config.json /var/lib/kubelet/config.json"
     ]
   }
   depends_on = [
