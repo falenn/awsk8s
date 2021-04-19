@@ -14,7 +14,7 @@ resource "null_resource" "k8s-worker-join" {
   provisioner "remote-exec" {
     inline = [
       "/usr/bin/aws s3 cp ${var.s3_k8s_jointoken_bucket}${var.s3_k8s_join_filename} /tmp/joincmd",
-      "sudo bash /tmp/joincmd",
+      "sudo /usr/bin/bash /tmp/joincmd"
     ]
   }
   depends_on = [

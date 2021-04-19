@@ -9,6 +9,7 @@ To use this k8s installer, do the following:
 1.  Setup your env file
 2.  Install Docker on your local machine
 3.  Run Terraform Commands!
+4.  Kubectl
 
 ### 0. Setup AWSCLI on your host
 Make sure you define ~/.aws/config with the same default region as your project.  AWS CLI may be used to interrogate AMI instances, etc. using pass-through credentials.  No need to put AWS credentials in this config:
@@ -111,6 +112,13 @@ Destroy!
 ```
 ./terraform destroy
 ```
+
+### Install Kubectl
+get the binary!
+```
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
+```
+If you need to, copy the ~/.kube/config from the master node to your ~/.kube/config as a quick way to get into your cluster.
 
 # S3 Options
 As an alternative to Baking (staging an OS / AMI with all binary dependencies before boot - see Hashicorp Packer), we can pull binaries from an S3 bucket and apply them - definitely faster than docker pulling from internet repositories with rate-limiting.
