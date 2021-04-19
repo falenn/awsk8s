@@ -13,13 +13,11 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 TMP_PATH=/tmp/docker
 
 
-
-
 while getopts "b:o:" arg; do
   case $arg in
     b)
       S3_BUCKET_URI=$OPTARG
-      echo "S3 image cache bucket: $S3_BUCKET_URI"  
+      echo "S3 image cache bucket: $S3_BUCKET_URI"
       ;;
     o)
       S3_OBJECT_PREFIX=$OPTARG
@@ -41,7 +39,7 @@ if [ ! -z "$S3_BUCKET_URI" ]; then
     echo "Downloading from S3..."
     # copy files from S3 cache
     mkdir -p $TMP_PATH
-    /usr/bin/aws s3 cp $S3_BUCKET_URI $TMP_PATH --recursive
+    /usr/bin/aws s3 cp $S3_BUCKET_URI $TMP_PATH --recursive > /dev/null
     echo "Downloading done."
     ls -la $TMP_PATH
   fi
@@ -49,10 +47,12 @@ if [ ! -z "$S3_BUCKET_URI" ]; then
   sudo docker load -i $TMP_PATH/$S3_OBJECT_PREFIX.tar
   echo "$S3_OBJECT_PREFIX.tar downloaded to $TMP_PATH"
   # retag imported images
+
   while read REPOSITORY TAG IMAGE_ID
   do
     echo "== Tagging $REPOSITORY $TAG $IMAGE_ID =="
     sudo docker tag "$IMAGE_ID" "$REPOSITORY:$TAG"
-  done < $S3_OBJECT_PREFIX.list
+  done < $TMP_PATH/${S3_OBJECT_PREFIX}.list
 fi
+
 

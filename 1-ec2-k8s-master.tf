@@ -1,4 +1,7 @@
-
+  
+  # security group for ssh + all k8s service needs
+  variable "aws_k8s_master_security_group_id" {}
+ 
   # Remote Provision Key
   # Public Key must be base64 encoded
   #resource "aws_key_pair" "remote-provision-key" {
@@ -16,7 +19,7 @@
     instance_type 		= var.k8s-master-instance-type
     key_name			= var.aws_ssh_key_name
     associate_public_ip_address = false
-    vpc_security_group_ids	= [var.aws_security_group_id]
+    vpc_security_group_ids	= [var.aws_k8s_master_security_group_id]
     iam_instance_profile	= var.aws_iam_instance_profile
     subnet_id			= var.aws_subnet_id
     user_data			= data.template_file.user_data.rendered
@@ -27,7 +30,7 @@
       delete_on_termination = "true"
     }
     tags = {
-      USER = var.aws_username,
+      User = var.aws_username,
       Name = join("_", [local.k8s-master-hostname, count.index + 1]),
       project = var.aws_project,
       type = "k8s",
@@ -42,6 +45,7 @@
     type              = var.aws_ebs_k8s_vol_type
     size              = var.aws_ebs_k8s_vol_size
     tags = {
+      User = var.aws_username,
       Name = join("_", [local.k8s-master-hostname, count.index + 1]),
       project = var.aws_project,
       type = "k8s",
