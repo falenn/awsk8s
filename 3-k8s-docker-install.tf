@@ -64,10 +64,9 @@ resource "null_resource" "docker-install-master" {
   provisioner "remote-exec" {
     inline = [
       "chmod u+x /tmp/install-docker.sh",
+      "sudo cp /tmp/daemon.json /etc/docker/daemon.json",
       "sudo chown root:root /etc/docker/daemon.json",
       "/tmp/install-docker.sh",
-      "sudo cp /tmp/daemon.json /etc/docker/daemon.json",
-      "sudo systemctl restart docker",
       "sudo docker login ${var.docker_registry} --username ${var.docker_username} --password ${var.docker_password}"
     ]
   }
@@ -118,7 +117,6 @@ resource "null_resource" "docker-install-worker" {
       "sudo cp /tmp/daemon.json /etc/docker/daemon.json",
       "sudo chown root:root /etc/docker/daemon.json",
       "/tmp/install-docker.sh",
-      "sudo systemctl restart docker",
       "sudo docker login ${var.docker_registry} --username ${var.docker_username} --password ${var.docker_password}"
     ]
   }

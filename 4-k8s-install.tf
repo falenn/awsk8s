@@ -10,6 +10,23 @@ variable "docker_config_json_tpl" {
   default="./templates/docker/config.json.tpl"
 }
 
+# bucket containing k8s docker images for faster boot
+variable "s3_k8s_image_bucket" {
+  default="NONE"
+}
+
+# file name prefix for images.tar, images.list
+variable "s3_k8s_image_filename" {
+  default="dockerimages"
+}
+
+variable "s3_k8s_jointoken_bucket" {
+  default="NONE"
+}
+variable "s3_k8s_join_filename" {
+  default="joincmd"
+}
+
 #render the daemon.json
 data "template_file" "docker_config_json" {
   template = file(var.docker_config_json_tpl)
@@ -37,11 +54,17 @@ resource "null_resource" "k8s-install-master" {
     destination = "/tmp/install-k8s.sh"
   }
   provisioner "file" {
+    source = "scripts/s3LoadDockerCache.sh"
+    destination = "/tmp/s3LoadDockerCache.sh"
+  } 
+  provisioner "file" {
     content = data.template_file.docker_config_json.rendered
     destination = "/tmp/config.json"
   }
   provisioner "remote-exec" {
     inline = [
+      "chmod u+x /tmp/s3LoadDockerCache.sh",
+      "/tmp/s3LoadDockerCache.sh -b ${var.s3_k8s_image_bucket} -o ${var.s3_k8s_image_filename}",
       "chmod u+x /tmp/install-k8s.sh",
       "/tmp/install-k8s.sh",
       "sudo mkdir -p /var/lib/kubelet",
@@ -70,14 +93,21 @@ resource "null_resource" "k8s-install-worker" {
     destination = "/tmp/install-k8s.sh"
   }
   provisioner "file" {
+    source = "scripts/s3LoadDockerCache.sh"
+    destination = "/tmp/s3LoadDockerCache.sh"
+  }
+  provisioner "file" {
     content = data.template_file.docker_config_json.rendered
     destination = "/tmp/config.json"
   }
   provisioner "remote-exec" {
     inline = [
+      "chmod u+x /tmp/s3LoadDockerCache.sh",
+      "/tmp/s3LoadDockerCache.sh -b ${var.s3_k8s_image_bucket} -o ${var.s3_k8s_image_filename}",
       "chmod u+x /tmp/install-k8s.sh",
       "/tmp/install-k8s.sh",
-      "sudo cp /tmp/config.json /usr/lib/kubelet/config.json"
+      "sudo mkdir -p /var/lib/kubelet",
+      "sudo cp /tmp/config.json /var/lib/kubelet/config.json"
     ]
   }
   depends_on = [
@@ -108,7 +138,9 @@ resource "null_resource" "k8s-setup" {
       "sudo chown ec2-user:ec2-user /home/ec2-user/.kube/config",
       "/usr/bin/kubectl taint nodes --all node-role.kubernetes.io/master-",
       "/usr/bin/kubectl apply -f /tmp/tigera-operator.yaml",
-      "/usr/bin/kubectl apply -f /tmp/custom-resources.yaml"
+      "/usr/bin/kubectl apply -f /tmp/custom-resources.yaml",
+      "/usr/bin/kubeadm token create --print-join-command >> /tmp/${var.s3_k8s_join_filename}",
+      "/usr/bin/aws s3 cp /tmp/${var.s3_k8s_join_filename} ${var.s3_k8s_jointoken_bucket}"
     ]
   }
   depends_on = [

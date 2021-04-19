@@ -5,9 +5,18 @@ This project uses Terraform to spin up infrastructure on AWS.  This terraform in
 
 ## Quickstart
 To use this k8s installer, do the following:
+0.  AWSCLI Setup
 1.  Setup your env file
 2.  Install Docker on your local machine
 3.  Run Terraform Commands!
+
+### 0. Setup AWSCLI on your host
+Make sure you define ~/.aws/config with the same default region as your project.  AWS CLI may be used to interrogate AMI instances, etc. using pass-through credentials.  No need to put AWS credentials in this config:
+```
+[default]
+region = us-east-1
+output = json
+```
 
 ### 1. Setting up Your env file
 In the directory where you have cloned this project, create a key=value file of required environment vars named env.  
@@ -102,6 +111,60 @@ Destroy!
 ```
 ./terraform destroy
 ```
+
+# S3 Options
+As an alternative to Baking (staging an OS / AMI with all binary dependencies before boot - see Hashicorp Packer), we can pull binaries from an S3 bucket and apply them - definitely faster than docker pulling from internet repositories with rate-limiting.
+
+## Steps
+1. Create an S3 bucket
+
+## S3 cmds
+list buckets
+```
+aws s3 ls
+```
+
+list bucket object
+```
+aws s3 ls <bucket>
+```
+
+copy object to S3 Bucket
+```
+aws s3 cp <source> <target>
+aws s3 cp k8s-dockerimages.tar s3://project-k8s/images/k8s-dockerimages.tar
+aws s3 cp k8s-dockerimages.list S3://project-k8s/images/k8s-dockerimages.list
+```
+Copying From S3 to Host is just opposite
+
+
+
+Docker export images
+```
+docker save $(docker images -q) -o /path/to/save/mydockersimages.tar
+```
+Docker export tags
+```
+docker images | sed '1d' | awk '{print $1 " " $2 " " $3}' > mydockersimages.list
+```
+
+Docker import images
+```
+docker load -i ./k8s-dockerimages.tar
+```
+
+Docker import tags
+```
+while read REPOSITORY TAG IMAGE_ID
+do
+        echo "== Tagging $REPOSITORY $TAG $IMAGE_ID =="
+        docker tag "$IMAGE_ID" "$REPOSITORY:$TAG"
+done < mydockersimages.list
+```
+
+
+now, the ec2 host can pull those objects from the bucket, given that the iam_instance_profile has been granted such permissions.
+
 
 # Appendix
 ## Terraform Approach
