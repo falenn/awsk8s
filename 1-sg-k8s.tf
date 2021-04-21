@@ -75,7 +75,7 @@ resource "aws_security_group" "allow_k8s_management" {
     from_port        = 30000
     to_port          = 32767
     protocol         = "tcp"
-    cidr_blocks      = [var.aws_vpc_main_cidr_block]
+    cidr_blocks      = [var.aws_vpc_main_cidr_block, var.aws_k8s_nodeport_access_cidr_block]
   }
 
   egress {

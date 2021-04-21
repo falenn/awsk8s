@@ -26,4 +26,5 @@ variable "aws_vpc_main_cidr_block" {}
 variable "aws_subnet_id" {}
 variable "aws_subnet_cidr_block" {}
 variable "aws_k8s_api_access_cidr_block" {}
+variable "aws_k8s_nodeport_access_cidr_block" {}
 
