@@ -1,5 +1,10 @@
-  # security group for k8s worker needs + ssh
-  variable "aws_k8s_worker_security_group_id" {}
+variable "k8s-worker-instance-type" {
+    default="t3.small"
+  }
+
+  variable "aws_ec2_k8s_worker_count" {
+    default=0
+  }
 
 
 # Create and bootstrap k8s workers
@@ -9,7 +14,10 @@
     instance_type               = var.k8s-worker-instance-type
     key_name                    = var.aws_ssh_key_name
     associate_public_ip_address = false
-    vpc_security_group_ids      = [var.aws_k8s_worker_security_group_id]
+    vpc_security_group_ids        = [aws_security_group.allow_ssh.id,
+                                   aws_security_group.allow_all_egress.id,
+                                   aws_security_group.allow_k8s_management.id,
+                                   aws_security_group.allow_k8s_calico.id]
     iam_instance_profile        = var.aws_iam_instance_profile
     subnet_id                   = var.aws_subnet_id
     user_data                   = data.template_file.user_data.rendered
@@ -22,9 +30,9 @@
     tags = {
       User = var.aws_username
       Name = join("_", [local.k8s-worker-hostname, count.index + 1]),
-      project = var.aws_project,
-      type = "k8s",
-      subtype = "worker",
+      Project = var.aws_project,
+      Type = "k8s",
+      Subtype = "worker",
       Managed_By  =   "Terraform"
     }
     provisioner "file" {
@@ -47,9 +55,9 @@
     tags = {
       User = var.aws_username,
       Name = join("_", [local.k8s-worker-hostname, count.index + 1]),
-      project = var.aws_project,
-      type = "k8s",
-      subtype = "worker",
+      Project = var.aws_project,
+      Type = "k8s",
+      Subtype = "worker",
       Managed_By  =   "Terraform"
     }
   }

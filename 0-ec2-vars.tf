@@ -1,17 +1,3 @@
-variable "k8s-master-instance-type" {
-    default="t3.medium"
-  }
-  variable "k8s-worker-instance-type" {
-    default="t3.small"
-  }
-
-  variable "aws_ec2_k8s_worker_count" {
-    default=0
-  }
-
-  variable "aws_ec2_k8s_master_count" {
-    default=1
-  }
 
   variable "aws_ec2_boot_vol_size" {
     default=20
