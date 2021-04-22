@@ -125,12 +125,25 @@ Destroy!
 ./terraform destroy
 ```
 
-### Install Kubectl
+4. Install Kubectl
 get the binary!
 ```
 curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
 ```
+
+or run the script:
+```
+scripts/user-tools/install-kubectl.sh
+```
+
+Now, get access to your cluster -
 If you need to, copy the ~/.kube/config from the master node to your ~/.kube/config as a quick way to get into your cluster.
+
+5.  Install Helm
+Run the Script!
+```
+scripts/user-tools/install-helm.sh
+```
 
 # S3 Options
 As an alternative to Baking (staging an OS / AMI with all binary dependencies before boot - see Hashicorp Packer), we can pull binaries from an S3 bucket and apply them - definitely faster than docker pulling from internet repositories with rate-limiting.

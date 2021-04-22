@@ -1,4 +1,4 @@
-variable "k8s-master-instance-type" {
+variable "aws_ec2_k8s_master_instance_type" {
    default="t3.medium"
 }
 
@@ -21,7 +21,7 @@ variable "aws_ec2_k8s_master_count" {
 resource "aws_instance" "k8s-master" {
   provider 			= aws
   ami 			= var.aws_ami_id
-  instance_type 		= var.k8s-master-instance-type
+  instance_type 		= var.aws_ec2_k8s_master_instance_type
   key_name			= var.aws_ssh_key_name
   associate_public_ip_address = false
   vpc_security_group_ids	= [aws_security_group.allow_ssh.id, 
@@ -69,12 +69,12 @@ resource "aws_volume_attachment" "ebs_att_k8s-master" {
   device_name = "/dev/sdf"
   volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
   instance_id = aws_instance.k8s-master.*.id[count.index]
-  #connection {
-  #  type    = "ssh"
-  #  user    = "ec2-user"
-  #  host    = aws_instance.k8s-master.*.private_ip[count.index]
-  #  private_key = file("/root/.ssh/id_rsa")
-  #}   
+  connection {
+    type    = "ssh"
+    user    = "ec2-user"
+    host    = aws_instance.k8s-master.*.private_ip[count.index]
+    private_key = file("/root/.ssh/id_rsa")
+  }   
   #provisioner "file" {
   #  source      = "scripts/setupStorageLVM.sh"
   #  destination = "/tmp/setupStorageLVM.sh"
@@ -85,6 +85,11 @@ resource "aws_volume_attachment" "ebs_att_k8s-master" {
   #    "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
   #  ]
   #}
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum install -y lvm2"
+    ]
+  }
 }
   
 

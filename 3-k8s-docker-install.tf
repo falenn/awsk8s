@@ -41,7 +41,7 @@ resource "null_resource" "docker-prep-master" {
     destination = "/tmp/install-docker.sh"
   }
   provisioner "remote-exec" {
-    in-line = [
+    inline = [
       "sudo mkdir -p ${var.docker_data_directory}"
     ]
   }

@@ -1,4 +1,4 @@
-variable "k8s-worker-instance-type" {
+variable "aws_ec2_k8s_worker_instance_type" {
     default="t3.small"
   }
 
@@ -11,10 +11,10 @@ variable "k8s-worker-instance-type" {
   resource "aws_instance" "k8s-worker" {
     provider                    = aws
     ami                         = var.aws_ami_id
-    instance_type               = var.k8s-worker-instance-type
+    instance_type               = var.aws_ec2_k8s_master_instance_type
     key_name                    = var.aws_ssh_key_name
     associate_public_ip_address = false
-    vpc_security_group_ids        = [aws_security_group.allow_ssh.id,
+    vpc_security_group_ids      = [aws_security_group.allow_ssh.id,
                                    aws_security_group.allow_all_egress.id,
                                    aws_security_group.allow_k8s_management.id,
                                    aws_security_group.allow_k8s_calico.id]
@@ -58,12 +58,12 @@ variable "k8s-worker-instance-type" {
     device_name = "/dev/sdf"
     volume_id   = aws_ebs_volume.ebs_k8s-worker_data.*.id[count.index]
     instance_id = aws_instance.k8s-worker.*.id[count.index]
-    #connection {
-    #  type    = "ssh"
-    #  user    = "ec2-user"
-    #  host    = aws_instance.k8s-worker.*.private_ip[count.index]
-    #  private_key = file("/root/.ssh/id_rsa")
-    #}
+    connection {
+      type    = "ssh"
+      user    = "ec2-user"
+      host    = aws_instance.k8s-worker.*.private_ip[count.index]
+      private_key = file("/root/.ssh/id_rsa")
+    }
     #provisioner "file" {
     #  source      = "scripts/setupStorageLVM.sh"
     #  destination = "/tmp/setupStorageLVM.sh"
@@ -74,6 +74,11 @@ variable "k8s-worker-instance-type" {
     #    "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
     #  ]
     #}
+    provisioner "remote-exec" {
+      inline = [
+        "sudo yum install -y lvm2"
+      ]
+    }
   }
 
 
