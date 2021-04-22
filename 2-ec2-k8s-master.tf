@@ -69,22 +69,22 @@ resource "aws_volume_attachment" "ebs_att_k8s-master" {
   device_name = "/dev/sdf"
   volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
   instance_id = aws_instance.k8s-master.*.id[count.index]
-  connection {
-    type    = "ssh"
-    user    = "ec2-user"
-    host    = aws_instance.k8s-master.*.private_ip[count.index]
-    private_key = file("/root/.ssh/id_rsa")
-  }   
-  provisioner "file" {
-    source      = "scripts/setupStorageLVM.sh"
-    destination = "/tmp/setupStorageLVM.sh"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/setupStorageLVM.sh",
-      "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
-    ]
-  }
+  #connection {
+  #  type    = "ssh"
+  #  user    = "ec2-user"
+  #  host    = aws_instance.k8s-master.*.private_ip[count.index]
+  #  private_key = file("/root/.ssh/id_rsa")
+  #}   
+  #provisioner "file" {
+  #  source      = "scripts/setupStorageLVM.sh"
+  #  destination = "/tmp/setupStorageLVM.sh"
+  #}
+  #provisioner "remote-exec" {
+  #  inline = [
+  #    "chmod +x /tmp/setupStorageLVM.sh",
+  #    "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
+  #  ]
+  #}
 }
   
 

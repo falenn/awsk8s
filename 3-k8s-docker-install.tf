@@ -9,7 +9,7 @@ variable "docker_registry" {
 variable "docker_username" {}
 variable "docker_password" {}
 variable "docker_data_directory" {
-  default = "/data/docker"
+  default = "/var/lib/docker"
 }
 
 variable "docker_daemon_json_tpl" {

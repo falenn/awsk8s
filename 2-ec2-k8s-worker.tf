@@ -35,16 +35,6 @@ variable "k8s-worker-instance-type" {
       Subtype = "worker",
       Managed_By  =   "Terraform"
     }
-    provisioner "file" {
-      source      = "scripts/setupStorageLVM.sh"
-      destination = "/tmp/setupStorageLVM.sh"
-      connection {
-        type    = "ssh"
-        user    = "ec2-user"
-        host    = self.private_ip
-        private_key = file("/root/.ssh/id_rsa")
-      }
-    }
   }
 
   resource "aws_ebs_volume" "ebs_k8s-worker_data" {
@@ -68,18 +58,22 @@ variable "k8s-worker-instance-type" {
     device_name = "/dev/sdf"
     volume_id   = aws_ebs_volume.ebs_k8s-worker_data.*.id[count.index]
     instance_id = aws_instance.k8s-worker.*.id[count.index]
-    provisioner "remote-exec" {
-      inline = [
-        "chmod +x /tmp/setupStorageLVM.sh",
-        "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
-      ]
-      connection {
-        type    = "ssh"
-        user    = "ec2-user"
-        host    = aws_instance.k8s-worker.*.private_ip[count.index]
-        private_key = file("/root/.ssh/id_rsa")
-      }
-    }
+    #connection {
+    #  type    = "ssh"
+    #  user    = "ec2-user"
+    #  host    = aws_instance.k8s-worker.*.private_ip[count.index]
+    #  private_key = file("/root/.ssh/id_rsa")
+    #}
+    #provisioner "file" {
+    #  source      = "scripts/setupStorageLVM.sh"
+    #  destination = "/tmp/setupStorageLVM.sh"
+    #}
+    #provisioner "remote-exec" {
+    #  inline = [
+    #    "chmod +x /tmp/setupStorageLVM.sh",
+    #    "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
+    #  ]
+    #}
   }
 
 
