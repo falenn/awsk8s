@@ -69,6 +69,10 @@ Variable Description
 | TF_VAR_aws_username | $USER | String, no quotes | AWS Label |
 | TF_VAR_aws_resource_prefix | $USER | String, no quotes | AWS Label |
 | TF_VAR_aws_project | my-project | String, no quotes | AWS Label |
+| TF_VAR_aws_subnet_id | subnet-1234567890abcdef | AWS Subnet ID | EC2 > Network & Security > Subnets |
+| TF_VAR_aws_subnet_cidr_block | 10.x.x.x/26 | String, no quotes | Network CIDR | 
+| TF_VAR_aws_k8s_api_access_cidr_block | 10.x.x.x/22 | String, no quotes | CIDR where desiring to use API from |
+| TF_VAR_aws_k8s_nodeport_access_cidr_block | 0.0.0.0/0 - this would allow ALL access | String, no quotes | CIDR where desiring access from |
 | TF_VAR_aws_subnet_id | subnet-1234567890abcdef | AWS subnet ID | EC2 > Network & Security > Subnets |
 | TF_VAR_aws_security_group_id | sg-1234567890abcdef | AWS Security Group ID | EC2 > Network & Security > Security Groups |
 | TF_VAR_aws_iam_instance_profile | myks-user-profile | AWS IAM Role | IAM > Roles |
