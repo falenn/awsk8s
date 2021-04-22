@@ -40,6 +40,11 @@ resource "null_resource" "docker-prep-master" {
     source = "scripts/install-docker.sh"
     destination = "/tmp/install-docker.sh"
   }
+  provisioner "remote-exec" {
+    in-line = [
+      "sudo mkdir -p ${var.docker_data_directory}"
+    ]
+  }
   provisioner "file" {
     content = data.template_file.docker_daemon_json.rendered
     destination = "/tmp/daemon.json"
