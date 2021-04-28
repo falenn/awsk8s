@@ -20,14 +20,23 @@ while [[ $status -ne 0 ]]; do
     sleep 5;
   else
 
-# add repo
-sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-# install
-sudo yum install -y containerd.io-1.2.13 docker-ce-19.03.11 docker-ce-cli-19.03.11
+# Handle Amazon 2 Linux
+cat /etc/os-release | grep -e "amazon_linux:2"
+if [ $? -eq 0 ]; then
+  sudo amazon-linux-extras install docker -y
+else
 
-# enable docker service
-sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo systemctl daemon-reload
+  # add repo
+  sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+  # install
+  sudo yum install -y containerd.io-1.2.13 docker-ce-19.03.11 docker-ce-cli-19.03.11
+
+  # enable docker service
+  sudo mkdir -p /etc/systemd/system/docker.service.d
+  sudo systemctl daemon-reload
+fi
+
 sudo systemctl restart docker
 sudo systemctl enable docker
 
