@@ -44,7 +44,7 @@ if [ ! -z "$S3_BUCKET_URI" ]; then
     ls -la $TMP_PATH
   fi
   # load into docker
-  sudo docker load -i $TMP_PATH/$S3_OBJECT_PREFIX.tar
+  sudo docker load -i $TMP_PATH/$S3_OBJECT_PREFIX.tar > /dev/null
   echo "$S3_OBJECT_PREFIX.tar downloaded to $TMP_PATH"
   # retag imported images
 
