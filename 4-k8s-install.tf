@@ -132,7 +132,7 @@ resource "null_resource" "k8s-setup" {
   }
   provisioner "remote-exec" {
     inline = [
-      "sudo /usr/bin/kubeadm init --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all",
+      "sudo /usr/bin/kubeadm init --pod-network-cidr=${var.aws_k8s_pod_network_cidr} --ignore-preflight-errors=all",
       "mkdir -p /home/ec2-user/.kube",
       "sudo cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config",
       "sudo chown ec2-user:ec2-user /home/ec2-user/.kube/config",
