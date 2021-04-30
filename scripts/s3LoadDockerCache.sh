@@ -2,12 +2,12 @@
 
 
 # exit when any command fails
-set -e
+#set -e
 
 # keep track of the last executed command
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
-trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+#trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 # Vars
 TMP_PATH=/tmp/docker
@@ -33,7 +33,8 @@ done
 
 # prep host with docker image import for S3
 echo "Checking for cache available at S3: ${S3_BUCKET_URI} for images: ${S3_OBJECT_PREFIX}"
-if [ ! -z "$S3_BUCKET_URI" ]; then
+if [ -v S3_BUCKET_URI ]; then
+if [ ! -z ${S3_BUCKET_URI} ]; then
   file=$TMP_PATH/${S3_OBJECT_PREFIX}.tar
   if [ ! -f "$file" ]; then
     echo "Downloading from S3..."
@@ -54,5 +55,5 @@ if [ ! -z "$S3_BUCKET_URI" ]; then
     sudo docker tag "$IMAGE_ID" "$REPOSITORY:$TAG"
   done < $TMP_PATH/${S3_OBJECT_PREFIX}.list
 fi
-
+fi
 

@@ -1,3 +1,16 @@
+# Install Helm
+https://helm.sh/docs/intro/install/
+'''
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+$ chmod 700 get_helm.sh
+$ ./get_helm.sh
+'''
+
+# install helm rook repo
+helm repo add rook-release https://charts.rook.io/release
+kubectl create namespace rook-ceph
+helm install --namespace rook-ceph rook-ceph rook-release/rook-ceph
+
 # setup Rook Ceph -
 
 kubectl create namespace rook-ceph

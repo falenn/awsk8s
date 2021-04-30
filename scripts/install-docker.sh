@@ -24,6 +24,7 @@ while [[ $status -ne 0 ]]; do
 cat /etc/os-release | grep -e "amazon_linux:2"
 if [ $? -eq 0 ]; then
   sudo amazon-linux-extras install docker -y
+  sudo install -y iproute-tc
 else
 
   # add repo
