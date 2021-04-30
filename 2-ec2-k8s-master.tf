@@ -5,6 +5,14 @@ variable "aws_ec2_k8s_master_instance_type" {
 variable "aws_ec2_k8s_master_count" {
   default=1
 }
+
+variable "aws_ec2_k8s_master_ebs_name" {
+    default="xvdf"
+}
+locals {
+  aws_ec2_k8s_master_ebs_device = "/dev/${var.aws_ec2_k8s_master_ebs_name}"
+  aws_ec2_k8s_master_ebs_partition = "${var.aws_ec2_k8s_master_ebs_name}1"
+}
  
  
 # Remote Provision Key
@@ -66,7 +74,7 @@ resource "aws_ebs_volume" "ebs_k8s-master_data" {
 # Storage for k8s-masters
 resource "aws_volume_attachment" "ebs_att_k8s-master" {
   count 	= var.aws_ec2_k8s_master_count
-  device_name = "/dev/sdf"
+  device_name = local.aws_ec2_k8s_master_ebs_device
   volume_id   = aws_ebs_volume.ebs_k8s-master_data.*.id[count.index]
   instance_id = aws_instance.k8s-master.*.id[count.index]
   connection {
@@ -82,7 +90,7 @@ resource "aws_volume_attachment" "ebs_att_k8s-master" {
   #provisioner "remote-exec" {
   #  inline = [
   #    "chmod +x /tmp/setupStorageLVM.sh",
-  #    "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
+  #    "/tmp/setupStorageLVM.sh ${var.aws_ec2_k8s_master_ebs_name} ${local.aws_ec2_k8s_master_ebs_partition}"
   #  ]
   #}
   provisioner "remote-exec" {

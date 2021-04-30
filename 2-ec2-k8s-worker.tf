@@ -6,6 +6,15 @@ variable "aws_ec2_k8s_worker_instance_type" {
     default=0
   }
 
+   variable "aws_ec2_k8s_worker_ebs_name" {
+    default="xvdf"
+  }
+  locals {
+    aws_ec2_k8s_worker_ebs_device = "/dev/${var.aws_ec2_k8s_worker_ebs_name}"
+    aws_ec2_k8s_worker_ebs_partition = "${var.aws_ec2_k8s_worker_ebs_name}1"
+  }
+
+
 
 # Create and bootstrap k8s workers
   resource "aws_instance" "k8s-worker" {
@@ -55,7 +64,7 @@ variable "aws_ec2_k8s_worker_instance_type" {
   # Storage for k8s-workers
   resource "aws_volume_attachment" "ebs_att_k8s-worker" {
     count       = var.aws_ec2_k8s_worker_count
-    device_name = "/dev/sdf"
+    device_name = local.aws_ec2_k8s_worker_ebs_device
     volume_id   = aws_ebs_volume.ebs_k8s-worker_data.*.id[count.index]
     instance_id = aws_instance.k8s-worker.*.id[count.index]
     connection {
@@ -71,7 +80,7 @@ variable "aws_ec2_k8s_worker_instance_type" {
     #provisioner "remote-exec" {
     #  inline = [
     #    "chmod +x /tmp/setupStorageLVM.sh",
-    #    "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
+    #    "/tmp/setupStorageLVM.sh ${var.aws_ec2_k8s_worker_ebs_name} ${local.aws_ec2_k8s_worker_ebs_partition}"
     #  ]
     #}
     provisioner "remote-exec" {
