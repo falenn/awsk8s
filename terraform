@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 #
 # This is a wrapper for terraform, injecting vars we'd rather keep private and not checked into GIT, and
 # by running terraform in a docker container, we ease the install.

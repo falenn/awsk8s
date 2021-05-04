@@ -12,12 +12,28 @@ To use this k8s installer, do the following:
 4.  Kubectl
 
 ### 0. Setup AWSCLI on your host
+#### Install AWSCLI if you don't have it
+On Ubuntu
+```
+sudo apt-get install -y awscli
+```
+
+On CentOS7
+```
+curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+unzip awscli-bundle.zip
+sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+```
+
 Make sure you define ~/.aws/config with the same default region as your project.  AWS CLI may be used to interrogate AMI instances, etc. using pass-through credentials.  No need to put AWS credentials in this config:
 ```
 [default]
 region = us-east-1
 output = json
 ```
+
+We can also just run AWS CLI from Docker like we are doing for Terraform, but we will save that for another time.
+
 
 ### 1. Setting up Your env file
 In the directory where you have cloned this project, create a key=value file of required environment vars named env.  
@@ -35,51 +51,72 @@ TF_VAR_aws_project=my-project
 TF_VAR_aws_vpc_id=vpc-1234567890abcdef
 TF_VAR_aws_vpc_main_cidr_block=10.x.x.x/25
 
-# The subnet to deploy the ec2 instances to and the IPV4 CIDR block for the subnet
+# The private subnet to deploy the ec2 instances to - this should be the same subnet
+# that the ec2 instance you are deploying the cluster with is in
 TF_VAR_aws_subnet_id=subnet-1234567890abcdef
+# The IPV4 CIDR block for the private subnet
 TF_VAR_aws_subnet_cidr_block=10.x.x.x/26
 # CIDR blocks from which to restrict access to the K8s API and nodeport services
 TF_VAR_aws_k8s_api_access_cidr_block=10.x.x.x/22     <maybe restrict to within the VPC>
-TF_VAR_aws_k8s_nodeport_access_cidr_block=0.0.0.0/0  <this would allow all traffic>
+TF_VAR_aws_k8s_nodeport_access_cidr_block=0.0.0.0/0  <this would allow all traffic or traffic from an AWS loadbalancer>
 
 # The conveyence of any rights to the ec2 instance (e.g., access to the AWS CLI and various elements)
 TF_VAR_aws_iam_instance_profile=<from AWS, e.g., myk8s-user-profile>
 # The SSH key to use from AWS-managed keys
 # This is currently not used for login since we normalize the access to the ec2-user.  Not all AMIs present the same standard login user.
-TF_VAR_aws_ssh_key_name= SSH key managed in AWS
+TF_VAR_aws_ssh_key_name=<SSH key managed in AWS>
 
 # AMI to use for instance creation
 TF_VAR_aws_ami_name=<from AWS, e.g., "MY_AMI_CentOS7*">
 
-# Instance Counts
-# Default is 1
+# Instance Settings
+# Master count - default is 1
 TF_VAR_aws_ec2_k8s_master_count=1
-# Default is 0
+# Worker count - default is 0
 TF_VAR_aws_ec2_k8s_worker_count=1
+# master ec2 instance type
+TF_VAR_aws_ec2_k8s_master_instance_type=t2.medium
+# master EBS block attachment name
+TF_VAR_aws_ec2_k8s_master_ebs_name=xvdf
+# worker ec2 instance type
+TF_VAR_aws_ec2_k8s_worker_instance_type=t2.medium
+# worker EBS block attachment name
+TF_VAR_aws_ec2_k8s_worker_ebs_name=xvdf
+# Extra EBS block size for all nodes - attached storage for Ceph - in GB
+TF_VAR_aws_ebs_k8s_vol_size=200
 
 # The local SSH key to use - first must base64 encode the public key
 # cat ~/.ssh/id_rsa.pub | base64
 # paste that value here
 TF_VAR_ssh_deploy_key=<base64 encoded public key>
 ```
+#### SSH Keys
+Just as a note - do you have an ssh public key on your ec2-host to base64 encode?  You can create a new one.
+```
+ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/id_ed25519 -C "john@example.com"
+```
 
-Variable Description
+Now you can use this "Twisted Edwards" key (Stronger than RSA2048 and still compatible with Gitlab, etc.) and base64 the public for inclusion above.
+
+
+#### Variable Description
 | Variable  | Example | Type  | AWS Reference or Description |
 | :---      | :---    | :---  | :---      |
 | TF_VAR_aws_username | $USER | String, no quotes | AWS Label |
 | TF_VAR_aws_resource_prefix | $USER | String, no quotes | AWS Label |
 | TF_VAR_aws_project | my-project | String, no quotes | AWS Label |
-| TF_VAR_aws_subnet_id | subnet-1234567890abcdef | AWS Subnet ID | EC2 > Network & Security > Subnets |
-| TF_VAR_aws_subnet_cidr_block | 10.x.x.x/26 | String, no quotes | Network CIDR | 
-| TF_VAR_aws_k8s_api_access_cidr_block | 10.x.x.x/22 | String, no quotes | CIDR where desiring to use API from |
-| TF_VAR_aws_k8s_nodeport_access_cidr_block | 0.0.0.0/0 - this would allow ALL access | String, no quotes | CIDR where desiring access from |
 | TF_VAR_aws_subnet_id | subnet-1234567890abcdef | AWS subnet ID | EC2 > Network & Security > Subnets |
 | TF_VAR_aws_security_group_id | sg-1234567890abcdef | AWS Security Group ID | EC2 > Network & Security > Security Groups |
 | TF_VAR_aws_iam_instance_profile | myks-user-profile | AWS IAM Role | IAM > Roles |
 | TF_VAR_aws_ssh_key_name | my_ssh_key | String, no quotes | EC2 > Network & Security > Kye Pairs | 
 | TF_VAR_aws_ami_name | "My_AMI_CentOS7*" | String | EC2 > Images > AMIs |
 | TF_VAR_aws_ec2_k8s_master_count | 1 | number | Number of nodes to create | 
-| TF_VAR_aws_ec2_k8s_worker_count | 1 | number | NUmber of nodes to create |
+| TF_VAR_aws_ec2_k8s_master_instance_type | t2.medium | String | AWS ec2 server size to launch |
+| TF_VAR_aws_ec2_k8s_master_ebs_name | xvdf | String | name to give EBS storage device when present in /dev/ |
+| TF_VAR_aws_ec2_k8s_worker_count | 1 | number | Number of nodes to create |
+| TF_VAR_aws_ec2_k8s_worker_instance_type | t2.medium | String | AWS ec2 server size to launch |
+| TF_VAR_aws_ec2_k8s_worker_ebs_name | xvdf | String | name to give EBS storage device when present in /dev/ |
+| TF_VAR_aws_ebs_k8s_vol_size | 200 | Number in GB | Size of attached block storage on all nodes |
 | TF_VAR_ssh_deploy_key | c3NoLXJzYSBBQUFBQjNOemFDMXlj... | String, no quotes | base64 encoded id_rsa.pub | 
 | TF_VAR_docker_username | myname | String, no quotes | Dockerhub.com \ docker.io account name|
 | TF_VAR_docker_passwrod | password | String, no quotes | docker.io passwd - don't like this. Can omit and provide when prompted by Terraform|
@@ -135,12 +172,11 @@ or run the script:
 ```
 scripts/user-tools/install-kubectl.sh
 ```
-
-Now, get access to your cluster -
+Now, get access to the cluster:
 If you need to, copy the ~/.kube/config from the master node to your ~/.kube/config as a quick way to get into your cluster.
 
-5.  Install Helm
-Run the Script!
+5. Install Helm
+Run the script:
 ```
 scripts/user-tools/install-helm.sh
 ```
