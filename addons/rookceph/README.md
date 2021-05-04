@@ -22,7 +22,20 @@ helm ls --namespace rook-ceph
 ## after operator in ready state....
 ```
 kubectl create -f cluster.yaml
+kubectl create -f storageclass.yaml
+kubectl patch storageclass rook-ceph-block -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 ```
+## Try it out!
+In one terminal:
+```
+kubectl get pvc -w
+```
+
+Now, while in a watch, in a separate terminal, create the PVC.  If Ceph is functioning (it still may be coming up), the pvc will get created and bound.
+```
+kubectl create -f example-pvc.yaml
+```
+
 
 # Troubleshooting
 If OSDs are not starting,
