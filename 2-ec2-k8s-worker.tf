@@ -20,7 +20,7 @@ variable "aws_ec2_k8s_worker_instance_type" {
   resource "aws_instance" "k8s-worker" {
     provider                    = aws
     ami                         = var.aws_ami_id
-    instance_type               = var.aws_ec2_k8s_master_instance_type
+    instance_type               = var.aws_ec2_k8s_worker_instance_type
     key_name                    = var.aws_ssh_key_name
     associate_public_ip_address = false
     vpc_security_group_ids      = [aws_security_group.allow_ssh.id,
