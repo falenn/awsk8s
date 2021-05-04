@@ -16,13 +16,6 @@ resource "aws_security_group" "allow_k8s_api" {
     cidr_blocks      = [var.aws_k8s_api_access_cidr_block]
   }
 
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name = local.allow_k8s_api,
     Project = var.aws_project,

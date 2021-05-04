@@ -9,7 +9,7 @@ variable "docker_registry" {
 variable "docker_username" {}
 variable "docker_password" {}
 variable "docker_data_directory" {
-  default = "/data/docker"
+  default = "/var/lib/docker"
 }
 
 variable "docker_daemon_json_tpl" {
@@ -39,6 +39,11 @@ resource "null_resource" "docker-prep-master" {
   provisioner "file" {
     source = "scripts/install-docker.sh"
     destination = "/tmp/install-docker.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p ${var.docker_data_directory}"
+    ]
   }
   provisioner "file" {
     content = data.template_file.docker_daemon_json.rendered

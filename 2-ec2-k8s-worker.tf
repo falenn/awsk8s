@@ -1,4 +1,4 @@
-variable "k8s-worker-instance-type" {
+variable "aws_ec2_k8s_worker_instance_type" {
     default="t3.small"
   }
 
@@ -6,21 +6,30 @@ variable "k8s-worker-instance-type" {
     default=0
   }
 
+   variable "aws_ec2_k8s_worker_ebs_name" {
+    default="xvdf"
+  }
+  locals {
+    aws_ec2_k8s_worker_ebs_device = "/dev/${var.aws_ec2_k8s_worker_ebs_name}"
+    aws_ec2_k8s_worker_ebs_partition = "${var.aws_ec2_k8s_worker_ebs_name}1"
+  }
+
+
 
 # Create and bootstrap k8s workers
   resource "aws_instance" "k8s-worker" {
     provider                    = aws
     ami                         = var.aws_ami_id
-    instance_type               = var.k8s-worker-instance-type
+    instance_type               = var.aws_ec2_k8s_worker_instance_type
     key_name                    = var.aws_ssh_key_name
     associate_public_ip_address = false
-    vpc_security_group_ids        = [aws_security_group.allow_ssh.id,
+    vpc_security_group_ids      = [aws_security_group.allow_ssh.id,
                                    aws_security_group.allow_all_egress.id,
-                                   aws_security_group.allow_k8s_management.id,
-                                   aws_security_group.allow_k8s_calico.id]
+    				   aws_security_group.allow_local_subnet.id]
     iam_instance_profile        = var.aws_iam_instance_profile
     subnet_id                   = var.aws_subnet_id
     user_data                   = data.template_file.user_data.rendered
+    source_dest_check		= false
     count                       = var.aws_ec2_k8s_worker_count
     root_block_device {
       volume_type = var.aws_ebs_k8s_vol_type
@@ -34,16 +43,6 @@ variable "k8s-worker-instance-type" {
       Type = "k8s",
       Subtype = "worker",
       Managed_By  =   "Terraform"
-    }
-    provisioner "file" {
-      source      = "scripts/setupStorageLVM.sh"
-      destination = "/tmp/setupStorageLVM.sh"
-      connection {
-        type    = "ssh"
-        user    = "ec2-user"
-        host    = self.private_ip
-        private_key = file("/root/.ssh/id_rsa")
-      }
     }
   }
 
@@ -65,20 +64,29 @@ variable "k8s-worker-instance-type" {
   # Storage for k8s-workers
   resource "aws_volume_attachment" "ebs_att_k8s-worker" {
     count       = var.aws_ec2_k8s_worker_count
-    device_name = "/dev/sdf"
+    device_name = local.aws_ec2_k8s_worker_ebs_device
     volume_id   = aws_ebs_volume.ebs_k8s-worker_data.*.id[count.index]
     instance_id = aws_instance.k8s-worker.*.id[count.index]
+    connection {
+      type    = "ssh"
+      user    = "ec2-user"
+      host    = aws_instance.k8s-worker.*.private_ip[count.index]
+      private_key = file("/root/.ssh/id_rsa")
+    }
+    #provisioner "file" {
+    #  source      = "scripts/setupStorageLVM.sh"
+    #  destination = "/tmp/setupStorageLVM.sh"
+    #}
+    #provisioner "remote-exec" {
+    #  inline = [
+    #    "chmod +x /tmp/setupStorageLVM.sh",
+    #    "/tmp/setupStorageLVM.sh ${var.aws_ec2_k8s_worker_ebs_name} ${local.aws_ec2_k8s_worker_ebs_partition}"
+    #  ]
+    #}
     provisioner "remote-exec" {
       inline = [
-        "chmod +x /tmp/setupStorageLVM.sh",
-        "/tmp/setupStorageLVM.sh ${var.aws_ebs_device} ${var.aws_ebs_device_partition}"
+        "sudo yum install -y lvm2"
       ]
-      connection {
-        type    = "ssh"
-        user    = "ec2-user"
-        host    = aws_instance.k8s-worker.*.private_ip[count.index]
-        private_key = file("/root/.ssh/id_rsa")
-      }
     }
   }
 
