@@ -79,7 +79,7 @@ resource "aws_security_group" "allow_k8s_management" {
   }
 
   tags = {
-    Name = local.allow_k8s_api,
+    Name = local.allow_k8s_management,
     Project = var.aws_project,
     User = var.aws_username,
     Managed_By  =   "Terraform"
