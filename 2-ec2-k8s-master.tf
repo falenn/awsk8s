@@ -34,7 +34,7 @@ resource "aws_instance" "k8s-master" {
   associate_public_ip_address = false
   vpc_security_group_ids	= [aws_security_group.allow_ssh.id, 
 				   aws_security_group.allow_all_egress.id,
-				   aws_security_group.allow_local_subnet.id,
+				   aws_security_group.allow_all_subnet.id,
 				   aws_security_group.allow_k8s_api.id]
   iam_instance_profile	= var.aws_iam_instance_profile
   subnet_id			= var.aws_subnet_id

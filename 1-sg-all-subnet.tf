@@ -2,7 +2,7 @@ locals {
   allow_all_subnet = "${var.aws_resource_prefix}_allow_all_in_subnet"
 }
 
-resource "aws_security_group" "allow_local_subnet" {
+resource "aws_security_group" "allow_all_subnet" {
   name 		= local.allow_all_subnet
   description 	= "Allow all in the subnet"
   vpc_id 	= var.aws_vpc_id

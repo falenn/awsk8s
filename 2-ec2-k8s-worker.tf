@@ -25,7 +25,7 @@ variable "aws_ec2_k8s_worker_instance_type" {
     associate_public_ip_address = false
     vpc_security_group_ids      = [aws_security_group.allow_ssh.id,
                                    aws_security_group.allow_all_egress.id,
-    				   aws_security_group.allow_local_subnet.id]
+    				   aws_security_group.allow_all_subnet.id]
     iam_instance_profile        = var.aws_iam_instance_profile
     subnet_id                   = var.aws_subnet_id
     user_data                   = data.template_file.user_data.rendered
